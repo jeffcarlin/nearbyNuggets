@@ -108,6 +108,23 @@ def densityMap(sc_dat, ra_bins, dec_bins):
     return binned_counts
 
 
+def binsToSkyCoord(ra_bins, dec_bins):
+    binsize = (dec_bins[2]*u.deg-dec_bins[1]*u.deg).to(u.arcmin)
+    binsize_ra = binsize.value/np.cos(np.mean(dec_bins * u.deg))
+
+    # Create a SkyCoord array for all of the bin centers:
+    ra_allbins = []
+    dec_allbins = []
+
+    for ii in range(len(ra_bins)-1):
+        for jj in range(len(dec_bins)-1):
+            ra_allbins = np.append(ra_allbins, (ra_bins[ii]+binsize_ra/2.0))
+            dec_allbins = np.append(dec_allbins, (dec_bins[jj]+binsize.to(u.degree).value/2.0))
+
+    sc_allbins = SkyCoord(ra=ra_allbins*u.deg, dec=dec_allbins*u.deg)
+    return sc_allbins
+
+
 def densityBinStats(binned_counts, ra_bins, dec_bins, binned_counts_all=None,
                     binsize=None, inner_annulus=2.0, outer_annulus=5.0):
     # binned_counts: density of filtered sources in 2D bins as returned by densityMap
@@ -123,17 +140,20 @@ def densityBinStats(binned_counts, ra_bins, dec_bins, binned_counts_all=None,
     if binsize is None:
         binsize = (sc_bins[2].dec-sc_bins[1].dec).to(u.arcmin)
 
-    binsize_ra = binsize.value/np.cos(np.mean(dec_bins * u.deg))
-    # Create a SkyCoord array for all of the bin centers:
-    ra_allbins = []
-    dec_allbins = []
+    # binsize_ra = binsize.value/np.cos(np.mean(dec_bins * u.deg))
 
-    for ii in range(len(ra_bins)-1):
-        for jj in range(len(dec_bins)-1):
-            ra_allbins = np.append(ra_allbins, (ra_bins[ii]+binsize_ra/2.0))
-            dec_allbins = np.append(dec_allbins, (dec_bins[jj]+binsize.to(u.degree).value/2.0))
+    # # Create a SkyCoord array for all of the bin centers:
+    # ra_allbins = []
+    # dec_allbins = []
 
-    sc_allbins = SkyCoord(ra=ra_allbins*u.deg, dec=dec_allbins*u.deg)
+    # for ii in range(len(ra_bins)-1):
+    #     for jj in range(len(dec_bins)-1):
+    #        ra_allbins = np.append(ra_allbins, (ra_bins[ii]+binsize_ra/2.0))
+    #        dec_allbins = np.append(dec_allbins, (dec_bins[jj]+binsize.to(u.degree).value/2.0))
+
+    # sc_allbins = SkyCoord(ra=ra_allbins*u.deg, dec=dec_allbins*u.deg)
+
+    sc_allbins = binsToSkyCoord(ra_bins, dec_bins)
 
     # Limits of the background annulus:
     outer_radius = 5.0*binsize
@@ -164,5 +184,5 @@ def densityBinStats(binned_counts, ra_bins, dec_bins, binned_counts_all=None,
     return (nsig_bins, std_bins, bg_bins, bgareafrac_bins)
 
 
-def binsToImage(binned_array):
-    return binned_array.T
+def binsToImage(binned_array, binned_counts):
+    return binned_array.reshape(np.shape(binned_counts)).T
