@@ -1,0 +1,320 @@
+def plotcand6(sc_inp, gi_mags, i, info, comp_flag, cmdsel_flag, cand_flag,
+              star_flag, binsize=1.5, recalc_cen=False, savefig=False,
+              name_append='', overlay_pts=False):
+    """ 6 panel diagnostic figure -- CMD, spatial plot, density profile,
+        color image, smoothed images in g and i
+
+    Parameters
+    ----------
+    sc_inp : `astropy.skycoord`
+        input coordinates of objects centered at the desired position
+    gi_mags : ``
+        arrays of g and i-band magnitudes ([g_array, i_array])
+    comp_flag : `` "cen"
+        array of boolean flag values for the comparison population
+        (e.g., "cen" for the central regions of the host)
+    cmdsel_flag : `` "rgbbox_blue"
+        array of boolean flag values to select the sample of interest
+        (e.g., RGB stars)
+    cand_flag : `` "dwarf_msk_cmd"
+        array of boolean flag values to select the candidate of interest
+        (e.g., a candidate dwarf galaxy)
+    star_flag : `` "isstar"
+        array of boolean flag values to select point sources (i.e., stars)
+    i : ``
+
+    info : ``
+
+    binsize : ``
+
+    recalc_cen : `bool`
+
+    savefig : `bool`
+
+    name_append : `str`
+
+    overlay_pts : `bool`
+        whether to overlay detections on the images
+    """
+
+# To do:
+# add RGB box corners as input params
+#
+
+    params = {
+        'axes.labelsize': 14,
+        'font.size': 14,
+        'legend.fontsize': 12,
+        #   'xtick.labelsize': 16,
+        'xtick.major.width': 3,
+        'xtick.minor.width': 2,
+        'xtick.major.size': 8,
+        'xtick.minor.size': 5,
+        'xtick.direction': 'in',
+        'xtick.top': True,
+        'lines.linewidth': 3,
+        'axes.linewidth': 3,
+        'axes.labelweight': 3,
+        'axes.titleweight': 3,
+        'ytick.major.width': 3,
+        'ytick.minor.width': 2,
+        'ytick.major.size': 8,
+        'ytick.minor.size': 5,
+        'ytick.direction': 'in',
+        'ytick.right': True,
+        #   'ytick.labelsize': 20,
+        'text.usetex': True,
+        'text.latex.preamble': r'\boldmath',
+        'figure.figsize': [14, 18]
+    }
+
+    plt.rcParams.update(params)
+
+    binsize = binsize*u.arcmin
+
+    # Recalculate the center based on RGB stars, if flag is set:
+    if recalc_cen:
+        sc_orig = sc_inp
+        dwarf_msk_tmp = sc_all.separation(sc_inp) < (1.5*binsize)
+#        med_ra = np.median(ra[dwarf_msk_tmp & isstar & isofilt])
+#        med_dec = np.median(dec[dwarf_msk_tmp & isstar & isofilt])
+#        med_ra = np.median(ra[dwarf_msk_tmp & isstar & rgbbox])
+#        med_dec = np.median(dec[dwarf_msk_tmp & isstar & rgbbox])
+        med_ra = np.median(ra[dwarf_msk_tmp & isstar & rgbbox_blue])
+        med_dec = np.median(dec[dwarf_msk_tmp & isstar & rgbbox_blue])
+        sc_inp = SkyCoord(med_ra*u.deg, med_dec*u.deg)
+
+    dwarf_msk = sc_all.separation(sc_inp) < (1.5*binsize)
+    dwarf_msk_cmd = sc_all.separation(sc_inp) < (1.0*binsize)
+
+    # Color-magnitude diagram:
+    plt.subplot(321)
+    gmag = gi_mags[0]
+    imag = gi_mags[1]
+    gi = gmag - imag
+    plt.scatter(gi[comp_flag & star_flag], imag[comp_flag & star_flag], s=1,
+                c='Gray', alpha=.5, label='comparison')
+    plt.scatter(gi[cand_flag & star_flag], imag[cand_flag & star_flag], s=40,
+                color='DodgerBlue', label='candidate overdensity')
+    plt.scatter(gi[cand_flag & star_flag & cmdsel_flag],
+                imag[cand_flag & star_flag & cmdsel_flag], s=40,
+                color='Red', label='RGB')
+
+    # To do:
+    # plt.plot(xcorners_blue, ycorners_blue, color='Gray')
+
+    plt.legend(loc='upper left')
+    plt.xlim(-1, 3)
+    plt.ylim(26.8, 19.8)
+    plt.xlabel(r'$(g-i)_0$')
+    plt.ylabel(r'$i_0$')
+    plt.minorticks_on()
+    if recalc_cen:
+        ra_str = str('{:7.3f}'.format(sc_orig.ra.value))
+        dec_str = str('{:7.3f}'.format(sc_orig.dec.value))
+        nsig_str = str('{:5.1f}'.format(info))
+        plt.title(r', (RA, Dec)$_0$=('+ra_str+','+dec_str+'), Nsig='+nsig_str)
+        # plt.title(str(i)+r', (RA, Dec)$_0$=('+str('{:7.3f}'.format(sc_orig.ra.value))+','+str('{:7.3f}'.format(sc_orig.dec.value))+'), Nsig='+str('{:5.1f}'.format(info)))
+    #        plt.title(str(i)+r', (RA, Dec)$_0$=('+str('{:7.3f}'.format(sc_orig.ra.value))+','+str('{:7.3f}'.format(sc_orig.dec.value))+'), Nsig='+str('{:5.1f}'.format(info['SIG'])))
+    else:
+        ra_str = str('{:7.3f}'.format(sc_inp.ra.value))
+        dec_str = str('{:7.3f}'.format(sc_inp.dec.value))
+        nsig_str = str('{:5.1f}'.format(info))
+        plt.title(r', (RA, Dec)$_0$=('+ra_str+','+dec_str+'), Nsig='+nsig_str)
+
+            # plt.title(str(i)+', (RA, Dec)=('+str('{:7.3f}'.format(sc_inp.ra.value))+','+str('{:7.3f}'.format(sc_inp.dec.value))+'), Nsig='+str('{:5.1f}'.format(info)))
+    #        plt.title(str(i)+', (RA, Dec)=('+str('{:7.3f}'.format(sc_inp.ra.value))+','+str('{:7.3f}'.format(sc_inp.dec.value))+'), Nsig='+str('{:5.1f}'.format(info['SIG'])))
+
+    # Spatial plot:
+    plt.subplot(322)
+        plt.plot(ra[dwarf_msk & ~isstar], dec[dwarf_msk & ~isstar], '.', ms=4, color='Gray', alpha=0.3, label='not stars')
+        plt.plot(ra[dwarf_msk & isstar], dec[dwarf_msk & isstar], '.', ms=10, color='DodgerBlue', label='stars')
+    #    plt.plot(ra[dwarf_msk & isstar & isofilt], dec[dwarf_msk & isstar & isofilt], '.', ms=10, color='Red', label='RGB stars')
+    #    plt.plot(ra[dwarf_msk & isstar & rgbbox], dec[dwarf_msk & isstar & rgbbox], '.', ms=10, color='Red', label='RGB stars')
+        plt.plot(ra[dwarf_msk & isstar & rgbbox_blue], dec[dwarf_msk & isstar & rgbbox_blue], '.', ms=10, color='Red', label='RGB stars')
+        plt.xlabel('RA (deg)')
+        plt.ylabel('DEC (deg)')
+        plt.legend(loc='upper left')
+        plt.gca().invert_xaxis()
+        plt.minorticks_on()
+
+        # 1D radial deensity plot
+        nradbins = 10
+        radbinsize = 2*binsize/nradbins
+        radbins = np.linspace(0, binsize, nradbins+1)
+        radbin_cens = (radbins[1:] + radbins[:-1]) / 2.0
+        rad_density = np.zeros(nradbins)
+        for irad in range(nradbins):
+            area = 2*np.pi*(radbins[irad+1].value**2 - radbins[irad].value**2)
+            annulus_mask =  (sc_all.separation(sc_inp) >= radbins[irad]) & (sc_all.separation(sc_inp) < radbins[irad+1])
+    #        rad_density[irad] = len(ra[annulus_mask & isstar & isofilt]) / area
+    #        rad_density[irad] = len(ra[annulus_mask & isstar & rgbbox]) / area
+    rad_density[irad] = len(ra[annulus_mask & isstar & rgbbox_blue]) / area
+plt.subplot(323)
+plt.plot(radbin_cens,rad_density,'-.')
+plt.plot(radbin_cens,rad_density,'ko')
+plt.minorticks_on()
+
+if recalc_cen:
+    plt.title(str(i)+r', (RA, Dec)$_{new}$=('+str('{:7.3f}'.format(sc_inp.ra.value))+','+str('{:7.3f}'.format(sc_inp.dec.value))+')')
+
+plt.xlabel('Distance from center [arcmin]')
+plt.ylabel(r'Number of stars per arcsec$^2$')
+
+# Image:
+plt.subplot(324)
+censtar = np.where(sc_all.separation(sc_inp) == np.min(sc_all.separation(sc_inp)))
+patch = tab[censtar]['patch'].data[0]
+# print('patch: ',patch)
+match_g='/Users/jcarlin/Dropbox/local_volume_dwarfs/ngc2403/coadds_jan2021/fakedwarfs_g/calexp-HSC-G-0-'+str(patch)+'_fakes.fits'
+match_i='/Users/jcarlin/Dropbox/local_volume_dwarfs/ngc2403/coadds_jan2021/fakedwarfs_i/calexp-HSC-I2-0-'+str(patch)+'_fakes.fits'
+
+#patchstr = str(patch)+str('.fits')
+#match_g = [gim for gim in gimg_list if patchstr in gim]
+#match_i = [iim for iim in iimg_list if patchstr in iim]
+# print(match_g, match_i)
+hdulist = fits.open(match_i)
+w = WCS(hdulist[1].header, hdulist)
+img_i = hdulist[1].data
+hdulist.close()
+
+hdulist = fits.open(match_g)
+w = WCS(hdulist[1].header, hdulist)
+img_g = hdulist[1].data
+pixscale = np.abs(hdulist[1].header['CD1_1']*3600.0)
+hdulist.close()
+
+imx, imy = w.all_world2pix([sc_all[censtar].ra.value], [sc_all[censtar].dec.value],0)
+# print(imx, imy)
+img_r = img_i
+
+position = (imx, imy)
+xy_pix_size = np.int(np.floor(3.0*binsize.to(u.arcsec).value/pixscale))
+size = (xy_pix_size, xy_pix_size)     # pixels
+
+cutout_g = Cutout2D(img_g, position, size)
+cutout_r_tmp = Cutout2D(img_r, position, size)
+cutout_i = Cutout2D(img_i, position, size)
+
+cutout_r = (cutout_r_tmp.data+cutout_g.data)/2
+
+zscale = ZScaleInterval()
+vmin_g,vmax_g = zscale.get_limits(cutout_g.data)
+vmin_r,vmax_r = zscale.get_limits(cutout_r.data)
+vmin_i,vmax_i = zscale.get_limits(cutout_i.data)
+
+img = np.zeros((cutout_i.shape[0], cutout_i.shape[1], 3), dtype=float)
+img[:,:,0] = img_scale.linear(cutout_i.data, scale_min=0.1*vmin_i, scale_max=0.6*vmax_i)
+img[:,:,1] = img_scale.linear(cutout_r.data, scale_min=0.1*vmin_r, scale_max=0.9*vmax_r)
+img[:,:,2] = img_scale.linear(cutout_g.data, scale_min=0.1*vmin_g, scale_max=0.75*vmax_g)
+
+#    x_rgb, y_rgb = w.all_world2pix(ra[dwarf_msk & isstar & isofilt], dec[dwarf_msk & isstar & isofilt], 0)
+#    x_rgb, y_rgb = w.all_world2pix(ra[dwarf_msk & isstar & rgbbox], dec[dwarf_msk & isstar & rgbbox], 0)
+    x_rgb, y_rgb = w.all_world2pix(ra[dwarf_msk & isstar & rgbbox_blue], dec[dwarf_msk & isstar & rgbbox_blue], 0)
+
+    fig = plt.gca()
+    fig.axes.get_xaxis().set_visible(False)
+    fig.axes.xaxis.set_ticklabels([])
+    fig.axes.get_yaxis().set_visible(False)
+    fig.axes.yaxis.set_ticklabels([])
+
+    linelength_arcsec = 10.0
+    linelength_pix = linelength_arcsec/pixscale
+    plt.hlines(60,70,70+linelength_pix,color='White')
+    plt.text(30,85,'10 arcsec',color='White')
+
+    # print('x: ',x_rgb-imx+(size[0]/2))
+    # print('x: ',x_rgb-cutout_i.origin_original[0])
+    # print('y: ',y_rgb)
+    if overlay_pts:
+        plt.plot(x_rgb-cutout_i.xmin_original, y_rgb-cutout_i.ymin_original, 'ws', ms=10, markeredgewidth=1, fillstyle='none')
+
+    # plt.imshow(img, origin='lower')
+    plt.imshow(img, aspect='equal', origin='lower', extent=[0, xy_pix_size, 0, xy_pix_size])
+
+    # plt.tight_layout()
+
+    # Smoothed image:
+    plt.subplot(325)
+
+    fig = plt.gca()
+    fig.axes.get_xaxis().set_visible(False)
+    fig.axes.xaxis.set_ticklabels([])
+    fig.axes.get_yaxis().set_visible(False)
+    fig.axes.yaxis.set_ticklabels([])
+
+    # PLOT A SMOOTHED G-BAND IMAGE:
+    # Create kernel
+    gkernel = Gaussian2DKernel(x_stddev=3.0)
+    # Convolve data
+    z = convolve(img[:,:,2], gkernel)
+    # For blue RGB box:
+    minval = 0
+    maxval = 0.5 #7
+    plt.imshow(z, aspect='equal', origin='lower', vmin=minval, vmax=maxval, extent=[0, xy_pix_size, 0, xy_pix_size], cmap='gray')
+
+    # Smoothed image:
+    plt.subplot(326)
+
+    fig = plt.gca()
+    fig.axes.get_xaxis().set_visible(False)
+    fig.axes.xaxis.set_ticklabels([])
+    fig.axes.get_yaxis().set_visible(False)
+    fig.axes.yaxis.set_ticklabels([])
+
+    # PLOT A SMOOTHED I-BAND IMAGE:
+    # Create kernel
+    gkernel = Gaussian2DKernel(x_stddev=3.0)
+    # Convolve data
+    z = convolve(img[:,:,0], gkernel)
+    # For blue RGB box:
+    minval = 0
+    maxval = 0.5 #7
+    plt.imshow(z, aspect='equal', origin='lower', vmin=minval, vmax=maxval, extent=[0, xy_pix_size, 0, xy_pix_size], cmap='gray')
+
+    if savefig:
+        savefile='fakesearch_blue/cand_diagnostic_plots_4panel_withfakes_'+name_append+'.png'
+        plt.savefig(savefile, dpi=180)
+        print('Saved figure to ',savefile,'. Rename to avoid overwriting.')
+
+    plt.show()
+    plt.close()
+
+#%%
+
+#for i in range(len(sc_cand)):
+#    plotcand2(sc_cand[i], nsig_bins[dwarfcands2[i]], binsize=1.0, recalc_cen=True, savefig=True,
+#              name_append=str(i), overlay_pts=True)
+
+#for i in range(len(sc_cand)):
+#    plotcand2(sc_cand[i], i, nsig_bins[dwarfcands2[i]], binsize=1.0, recalc_cen=True, savefig=True,
+#              name_append=str(i))
+
+for i in range(len(sc_cand)):
+    plotcand6(sc_cand[i], i, nsig_bins[dwarfcands2[i]], binsize=1.0, recalc_cen=True, savefig=True,
+              name_append=str(i))
+
+#for i in [740, 741]:
+#    plotcand2(sc_cand[i], i, nsig_bins[dwarfcands2[i]], binsize=1.0, recalc_cen=True, savefig=True,
+#              name_append=str(i))
+
+#%%
+def recalc_cen(sc_inp, binsize=1.5):
+    binsize = binsize*u.arcmin
+
+    ra_out = []
+    dec_out = []
+
+    for i in range(len(sc_inp)):
+    # Recalculate the center based on RGB stars:
+        dwarf_msk_tmp = sc_all.separation(sc_inp[i]) < (1.5*binsize)
+#        med_ra = np.median(ra[dwarf_msk_tmp & isstar & rgbbox])
+#        med_dec = np.median(dec[dwarf_msk_tmp & isstar & rgbbox])
+        med_ra = np.median(ra[dwarf_msk_tmp & isstar & rgbbox_blue])
+        med_dec = np.median(dec[dwarf_msk_tmp & isstar & rgbbox_blue])
+        ra_out.append(med_ra)
+        dec_out.append(med_dec)
+
+    sc_out = SkyCoord(ra_out*u.deg, dec_out*u.deg)
+
+    return(sc_out)
