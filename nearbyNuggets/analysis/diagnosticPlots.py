@@ -1,5 +1,17 @@
-def plotcand6(sc_inp, sc_all, gi_mags, i, info,
-              comp_flag, cmdsel_flag, cand_flag, cand_flag_cmd,
+import astropy.units as u
+import matplotlib.pyplot as plt
+import numpy as np
+from astropy.io import fits
+from astropy.coordinates import SkyCoord
+from astropy.nddata import Cutout2D
+from astropy.visualization import ZScaleInterval
+import img_scale
+from astropy.wcs import WCS
+from astropy.convolution import convolve, Gaussian2DKernel
+
+
+def plotcand6(sc_inp, cat, i, nsig,
+              comp_flag, cmdsel_flag,
               star_flag, binsize=1.5, recalc_cen=False, savefig=False,
               name_append='', overlay_pts=False):
     """ 6 panel diagnostic figure -- CMD, spatial plot, density profile,
@@ -13,28 +25,28 @@ def plotcand6(sc_inp, sc_all, gi_mags, i, info,
         ###input coordinates of all objects
     cat : ``
         input catalog of all data
-    gi_mags : ``
-        arrays of g and i-band magnitudes ([g_array, i_array])
+    ### gi_mags : ``
+        ### arrays of g and i-band magnitudes ([g_array, i_array])
     comp_flag : `` "cen"
         array of boolean flag values for the comparison population
         (e.g., "cen" for the central regions of the host)
     cmdsel_flag : `` "rgbbox_blue"
         array of boolean flag values to select the sample of interest
         (e.g., RGB stars)
-    cand_flag_cmd : `` "dwarf_msk_cmd"
-        array of boolean flag values to select the candidate of interest
-        (e.g., a candidate dwarf galaxy) for CMD plotting
-    cand_flag : `` "dwarf_msk"
-        array of boolean flag values to select the candidate of interest
-        (e.g., a candidate dwarf galaxy)
+    ### cand_flag_cmd : `` "dwarf_msk_cmd"
+        ### array of boolean flag values to select the candidate of interest
+        ### (e.g., a candidate dwarf galaxy) for CMD plotting
+    ### cand_flag : `` "dwarf_msk"
+        ### array of boolean flag values to select the candidate of interest
+        ### (e.g., a candidate dwarf galaxy)
     star_flag : `` "isstar"
         array of boolean flag values to select point sources (i.e., stars)
+    binsize : `astropy.quantity`
+        size of bins in arcminutes
     i : ``
 
-    info : ``
-
-    binsize : ``
-
+    nsig : `float`
+        significance (in # of sigma excess above background) of overdensity
     recalc_cen : `bool`
 
     savefig : `bool`
@@ -46,12 +58,17 @@ def plotcand6(sc_inp, sc_all, gi_mags, i, info,
     """
 
 # To do:
+# remove/replace the input "i"
 # add RGB box corners as input params
-# add binsize as input param
 # make img_path an input
 # save path for figure
 
     sc_all = SkyCoord(ra=cat.dat['ra']*u.radian, dec=cat.dat['dec']*u.radian, frame='icrs')
+    ra = sc_all.ra.value
+    dec = sc_all.dec.value
+    gmag = cat.dat['g0_bgfix']
+    imag = cat.dat['i0_bgfix']
+    gi = gmag-imag
 
     params = {
         'axes.labelsize': 14,
@@ -92,24 +109,21 @@ def plotcand6(sc_inp, sc_all, gi_mags, i, info,
 #        med_dec = np.median(dec[dwarf_msk_tmp & isstar & isofilt])
 #        med_ra = np.median(ra[dwarf_msk_tmp & isstar & rgbbox])
 #        med_dec = np.median(dec[dwarf_msk_tmp & isstar & rgbbox])
-        med_ra = np.median(ra[dwarf_msk_tmp & isstar & rgbbox_blue])
-        med_dec = np.median(dec[dwarf_msk_tmp & isstar & rgbbox_blue])
+        med_ra = np.median(ra[dwarf_msk_tmp & star_flag & cmdsel_flag])
+        med_dec = np.median(dec[dwarf_msk_tmp & star_flag & cmdsel_flag])
         sc_inp = SkyCoord(med_ra*u.deg, med_dec*u.deg)
 
-    dwarf_msk = sc_all.separation(sc_inp) < (1.5*binsize)
-    dwarf_msk_cmd = sc_all.separation(sc_inp) < (1.0*binsize)
+    cand_flag = sc_all.separation(sc_inp) < (1.5*binsize)
+    cand_flag_cmd = sc_all.separation(sc_inp) < (1.0*binsize)
 
     # Color-magnitude diagram:
     plt.subplot(321)
-    gmag = gi_mags[0]
-    imag = gi_mags[1]
-    gi = gmag - imag
     plt.scatter(gi[comp_flag & star_flag], imag[comp_flag & star_flag], s=1,
                 c='Gray', alpha=.5, label='comparison')
-    plt.scatter(gi[cand_flag & star_flag], imag[cand_flag & star_flag], s=40,
+    plt.scatter(gi[cand_flag_cmd & star_flag], imag[cand_flag_cmd & star_flag], s=40,
                 color='DodgerBlue', label='candidate overdensity')
-    plt.scatter(gi[cand_flag & star_flag & cmdsel_flag],
-                imag[cand_flag & star_flag & cmdsel_flag], s=40,
+    plt.scatter(gi[cand_flag_cmd & star_flag & cmdsel_flag],
+                imag[cand_flag_cmd & star_flag & cmdsel_flag], s=40,
                 color='Red', label='RGB')
 
     # To do:
@@ -124,14 +138,14 @@ def plotcand6(sc_inp, sc_all, gi_mags, i, info,
     if recalc_cen:
         ra_str = str('{:7.3f}'.format(sc_orig.ra.value))
         dec_str = str('{:7.3f}'.format(sc_orig.dec.value))
-        nsig_str = str('{:5.1f}'.format(info))
+        nsig_str = str('{:5.1f}'.format(nsig))
         plt.title(r', (RA, Dec)$_0$=('+ra_str+','+dec_str+'), Nsig='+nsig_str)
         # plt.title(str(i)+r', (RA, Dec)$_0$=('+str('{:7.3f}'.format(sc_orig.ra.value))+','+str('{:7.3f}'.format(sc_orig.dec.value))+'), Nsig='+str('{:5.1f}'.format(info)))
     #        plt.title(str(i)+r', (RA, Dec)$_0$=('+str('{:7.3f}'.format(sc_orig.ra.value))+','+str('{:7.3f}'.format(sc_orig.dec.value))+'), Nsig='+str('{:5.1f}'.format(info['SIG'])))
     else:
         ra_str = str('{:7.3f}'.format(sc_inp.ra.value))
         dec_str = str('{:7.3f}'.format(sc_inp.dec.value))
-        nsig_str = str('{:5.1f}'.format(info))
+        nsig_str = str('{:5.1f}'.format(nsig))
         plt.title(r', (RA, Dec)$_0$=('+ra_str+','+dec_str+'), Nsig='+nsig_str)
 
             # plt.title(str(i)+', (RA, Dec)=('+str('{:7.3f}'.format(sc_inp.ra.value))+','+str('{:7.3f}'.format(sc_inp.dec.value))+'), Nsig='+str('{:5.1f}'.format(info)))
@@ -139,8 +153,6 @@ def plotcand6(sc_inp, sc_all, gi_mags, i, info,
 
     # Spatial plot:
     plt.subplot(322)
-    ra = sc_all.ra.value
-    dec = sc_all.dec.value
     plt.plot(ra[cand_flag & ~star_flag], dec[cand_flag & ~star_flag], '.',
              ms=4, color='Gray', alpha=0.3, label='not stars')
     plt.plot(ra[cand_flag & star_flag], dec[cand_flag & star_flag], '.',
@@ -177,7 +189,7 @@ def plotcand6(sc_inp, sc_all, gi_mags, i, info,
     if recalc_cen:
         ra_str = str('{:7.3f}'.format(sc_inp.ra.value))
         dec_str = str('{:7.3f}'.format(sc_inp.dec.value))
-        nsig_str = str('{:5.1f}'.format(info))
+        nsig_str = str('{:5.1f}'.format(nsig))
         plt.title(r', (RA, Dec)$_0$=('+ra_str+','+dec_str+'), Nsig='+nsig_str)
 
         # plt.title(str(i)+r', (RA, Dec)$_{new}$=('+str('{:7.3f}'.format(sc_inp.ra.value))+','+str('{:7.3f}'.format(sc_inp.dec.value))+')')
