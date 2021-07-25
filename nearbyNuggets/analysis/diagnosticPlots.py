@@ -200,7 +200,7 @@ def plotcand6(sc_inp, cat, i, nsig,
     # Image:
     plt.subplot(324)
     censtar = np.where(sc_all.separation(sc_inp) == np.min(sc_all.separation(sc_inp)))
-    patch = cat.dat[censtar]['ra'].data[0]
+    patch = cat.dat[censtar]['patch'].data[0]
     # patch = tab[censtar]['patch'].data[0]
 # print('patch: ',patch)
     img_path = '/Users/jcarlin/Dropbox/local_volume_dwarfs/ngc2403/coadds_jan2021/'
