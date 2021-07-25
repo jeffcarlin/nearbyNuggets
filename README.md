@@ -17,7 +17,7 @@ mining:
 - X Calculate binned number counts on the sky (and related statistics)
 
 analysis:
-- O Candidate diagnostic plots
+- X Candidate diagnostic plots
 - O Estimate structural parameters for candidates
 - O Estimate luminosities for candidates
 - O TRGB distance estimates
