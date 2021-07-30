@@ -24,6 +24,8 @@ analysis:
 - O Estimate luminosities for candidates
 - O TRGB distance estimates
 - O (Isochrone-based) [Fe/H] estimates
+- O Surface density profiles
+    - O Sersic, exponential, King model fits
 
 other:
 - O Read and overplot isochrones
