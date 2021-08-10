@@ -15,15 +15,20 @@ inputCatalogs:
 
 mining:
 - X Calculate binned number counts on the sky (and related statistics)
+    - O Scale stars by their completeness weights to create a "normalized" density map
+- O Detect candidate overdensities
 
 analysis:
-- O Candidate diagnostic plots
+- X Candidate diagnostic plots
 - O Estimate structural parameters for candidates
 - O Estimate luminosities for candidates
 - O TRGB distance estimates
 - O (Isochrone-based) [Fe/H] estimates
+- O Surface density profiles
+    - O Sersic, exponential, King model fits
 
 other:
 - O Read and overplot isochrones
 - O CMD plotting function? Other plotting functions?
 - O Generate fake dwarfs
+- O Photometric completeness, bias, etc. from AST analysis
