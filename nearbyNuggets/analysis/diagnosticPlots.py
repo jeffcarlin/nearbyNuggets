@@ -103,7 +103,7 @@ def plotcand6(sc_inp, cat, i, nsig,
 
     # Recalculate the center based on RGB stars, if flag is set:
     if recalc_cen:
-        sc_orig = sc_inp
+        # sc_orig = sc_inp
         dwarf_msk_tmp = sc_all.separation(sc_inp) < (1.5*binsize)
 #        med_ra = np.median(ra[dwarf_msk_tmp & isstar & isofilt])
 #        med_dec = np.median(dec[dwarf_msk_tmp & isstar & isofilt])
@@ -111,11 +111,18 @@ def plotcand6(sc_inp, cat, i, nsig,
 #        med_dec = np.median(dec[dwarf_msk_tmp & isstar & rgbbox])
         med_ra = np.median(ra[dwarf_msk_tmp & star_flag & cmdsel_flag])
         med_dec = np.median(dec[dwarf_msk_tmp & star_flag & cmdsel_flag])
-        sc_inp = SkyCoord(med_ra*u.deg, med_dec*u.deg)
+        sc_bin = SkyCoord(med_ra*u.deg, med_dec*u.deg)
+    else:
+        sc_bin = sc_inp.copy()
 
-    cand_flag = sc_all.separation(sc_inp) < (1.5*binsize)
-    cand_flag_cmd = sc_all.separation(sc_inp) < (1.0*binsize)
+    # For testing:
+    print('sc_bin: ', sc_bin)
+    print('sc_inp: ', sc_inp)
 
+    cand_flag = sc_all.separation(sc_bin) < (1.5*binsize)
+    cand_flag_cmd = sc_all.separation(sc_bin) < (1.0*binsize)
+
+    # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     # Color-magnitude diagram:
     plt.subplot(321)
     plt.scatter(gi[comp_flag & star_flag], imag[comp_flag & star_flag], s=1,
@@ -135,22 +142,26 @@ def plotcand6(sc_inp, cat, i, nsig,
     plt.xlabel(r'$(g-i)_0$')
     plt.ylabel(r'$i_0$')
     plt.minorticks_on()
-    if recalc_cen:
-        ra_str = str('{:7.3f}'.format(sc_orig.ra.value))
-        dec_str = str('{:7.3f}'.format(sc_orig.dec.value))
-        nsig_str = str('{:5.1f}'.format(nsig))
-        plt.title(r', (RA, Dec)$_0$=('+ra_str+','+dec_str+'), Nsig='+nsig_str)
-        # plt.title(str(i)+r', (RA, Dec)$_0$=('+str('{:7.3f}'.format(sc_orig.ra.value))+','+str('{:7.3f}'.format(sc_orig.dec.value))+'), Nsig='+str('{:5.1f}'.format(info)))
+    # if recalc_cen:
+        # # Print the recalculated bin center on the CMD:
+        # ra_str = str('{:7.3f}'.format(sc_bin.ra.value))
+        # dec_str = str('{:7.3f}'.format(sc_bin.dec.value))
+        # nsig_str = str('{:5.1f}'.format(nsig))
+        # plt.title(r', (RA, Dec)$_0$=('+ra_str+','+dec_str+'), Nsig='+nsig_str)
+        # # plt.title(str(i)+r', (RA, Dec)$_0$=('+str('{:7.3f}'.format(sc_orig.ra.value))+','+str('{:7.3f}'.format(sc_orig.dec.value))+'), Nsig='+str('{:5.1f}'.format(info)))
     #        plt.title(str(i)+r', (RA, Dec)$_0$=('+str('{:7.3f}'.format(sc_orig.ra.value))+','+str('{:7.3f}'.format(sc_orig.dec.value))+'), Nsig='+str('{:5.1f}'.format(info['SIG'])))
-    else:
-        ra_str = str('{:7.3f}'.format(sc_inp.ra.value))
-        dec_str = str('{:7.3f}'.format(sc_inp.dec.value))
-        nsig_str = str('{:5.1f}'.format(nsig))
-        plt.title(r', (RA, Dec)$_0$=('+ra_str+','+dec_str+'), Nsig='+nsig_str)
+    # else:
+
+    # Print the original bin center on the CMD:
+    ra_str = str('{:7.3f}'.format(sc_inp.ra.value))
+    dec_str = str('{:7.3f}'.format(sc_inp.dec.value))
+    nsig_str = str('{:5.1f}'.format(nsig))
+    plt.title(r', (RA, Dec)$_0$=('+ra_str+','+dec_str+'), Nsig='+nsig_str)
 
             # plt.title(str(i)+', (RA, Dec)=('+str('{:7.3f}'.format(sc_inp.ra.value))+','+str('{:7.3f}'.format(sc_inp.dec.value))+'), Nsig='+str('{:5.1f}'.format(info)))
     #        plt.title(str(i)+', (RA, Dec)=('+str('{:7.3f}'.format(sc_inp.ra.value))+','+str('{:7.3f}'.format(sc_inp.dec.value))+'), Nsig='+str('{:5.1f}'.format(info['SIG'])))
 
+    # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     # Spatial plot:
     plt.subplot(322)
     plt.plot(ra[cand_flag & ~star_flag], dec[cand_flag & ~star_flag], '.',
@@ -167,7 +178,8 @@ def plotcand6(sc_inp, cat, i, nsig,
     plt.gca().invert_xaxis()
     plt.minorticks_on()
 
-    # 1D radial deensity plot
+    # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    # 1D radial density plot
     nradbins = 10
     radbinsize = 2*binsize/nradbins
     radbins = np.linspace(0, binsize, nradbins+1)
@@ -175,32 +187,33 @@ def plotcand6(sc_inp, cat, i, nsig,
     rad_density = np.zeros(nradbins)
     for irad in range(nradbins):
         area = 2*np.pi*(radbins[irad+1].value**2 - radbins[irad].value**2)
-        annulus_mask = (sc_all.separation(sc_inp) >= radbins[irad]) &\
-                       (sc_all.separation(sc_inp) < radbins[irad+1])
+        annulus_mask = (sc_all.separation(sc_bin) >= radbins[irad]) &\
+                       (sc_all.separation(sc_bin) < radbins[irad+1])
     #        rad_density[irad] = len(ra[annulus_mask & isstar & isofilt]) / area
     #        rad_density[irad] = len(ra[annulus_mask & isstar & rgbbox]) / area
-    rad_density[irad] = len(ra[annulus_mask & star_flag & cmdsel_flag]) / area
+        rad_density[irad] = len(ra[annulus_mask & star_flag & cmdsel_flag]) / area
 
     plt.subplot(323)
     plt.plot(radbin_cens, rad_density, '-.')
     plt.plot(radbin_cens, rad_density, 'ko')
     plt.minorticks_on()
 
-    if recalc_cen:
-        ra_str = str('{:7.3f}'.format(sc_inp.ra.value))
-        dec_str = str('{:7.3f}'.format(sc_inp.dec.value))
-        nsig_str = str('{:5.1f}'.format(nsig))
-        plt.title(r', (RA, Dec)$_0$=('+ra_str+','+dec_str+'), Nsig='+nsig_str)
+    # if recalc_cen:
+    ra_str = str('{:7.3f}'.format(sc_bin.ra.value))
+    dec_str = str('{:7.3f}'.format(sc_bin.dec.value))
+    nsig_str = str('{:5.1f}'.format(nsig))
+    plt.title(r', (RA, Dec)$_0$=('+ra_str+','+dec_str+'), Nsig='+nsig_str)
 
         # plt.title(str(i)+r', (RA, Dec)$_{new}$=('+str('{:7.3f}'.format(sc_inp.ra.value))+','+str('{:7.3f}'.format(sc_inp.dec.value))+')')
 
     plt.xlabel('Distance from center [arcmin]')
     plt.ylabel(r'Number of stars per arcsec$^2$')
 
-    # Image:
+    # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    # Color image:
     plt.subplot(324)
-    censtar = np.where(sc_all.separation(sc_inp) == np.min(sc_all.separation(sc_inp)))
-    patch = cat.dat[censtar]['patch'].data[0]
+    censtar = np.where(sc_all.separation(sc_bin) == np.min(sc_all.separation(sc_bin)))
+    patch = np.char.strip(cat.dat[censtar]['patch'].data[0])
     # patch = tab[censtar]['patch'].data[0]
 # print('patch: ',patch)
     img_path = '/Users/jcarlin/Dropbox/local_volume_dwarfs/ngc2403/coadds_jan2021/'
@@ -277,7 +290,8 @@ def plotcand6(sc_inp, cat, i, nsig,
 
     # plt.tight_layout()
 
-    # Smoothed image:
+    # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    # Smoothed image, g-band:
     plt.subplot(325)
 
     fig = plt.gca()
@@ -290,14 +304,15 @@ def plotcand6(sc_inp, cat, i, nsig,
     # Create kernel
     gkernel = Gaussian2DKernel(x_stddev=3.0)
     # Convolve data
-    z = convolve(img[:,:,2], gkernel)
+    z = convolve(img[:, :, 2], gkernel)
     # For blue RGB box:
     minval = 0
     maxval = 0.5  # 7
     plt.imshow(z, aspect='equal', origin='lower', vmin=minval, vmax=maxval,
                extent=[0, xy_pix_size, 0, xy_pix_size], cmap='gray')
 
-    # Smoothed image:
+    # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    # Smoothed image, i-band:
     plt.subplot(326)
 
     fig = plt.gca()
