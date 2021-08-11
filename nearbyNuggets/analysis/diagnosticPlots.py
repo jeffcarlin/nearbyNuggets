@@ -339,25 +339,3 @@ def plotcand6(sc_inp, cat, i, nsig,
 
     plt.show()
     plt.close()
-
-
-def recalc_cen(sc_inp, binsize=1.5):
-    # Needs inputs: sc_all, binsize, ra, dec, masks
-    binsize = binsize*u.arcmin
-
-    ra_out = []
-    dec_out = []
-
-    for i in range(len(sc_inp)):
-    # Recalculate the center based on RGB stars:
-        dwarf_msk_tmp = sc_all.separation(sc_inp[i]) < (1.5*binsize)
-#        med_ra = np.median(ra[dwarf_msk_tmp & isstar & rgbbox])
-#        med_dec = np.median(dec[dwarf_msk_tmp & isstar & rgbbox])
-        med_ra = np.median(ra[dwarf_msk_tmp & star_flag & cmdsel_flag])
-        med_dec = np.median(dec[dwarf_msk_tmp & star_flag & cmdsel_flag])
-        ra_out.append(med_ra)
-        dec_out.append(med_dec)
-
-    sc_out = SkyCoord(ra_out*u.deg, dec_out*u.deg)
-
-    return(sc_out)

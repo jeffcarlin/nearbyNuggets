@@ -93,7 +93,6 @@ dwarfcands = sorted_bins[dwarfcand_select]
 
 #%%
 from nearbyNuggets.analysis.diagnosticPlots import plotcand6
-
 sep_cen = sc_dat.separation(n2403cen)
 cen = (sep_cen.arcmin < 15.0)
 
@@ -102,3 +101,14 @@ plotcand6(sc_bins[dwarfcands][2], rcat, 0, nsig_bins[dwarfcands][2],
           rcat.isstarFlag, binsize=1.5, recalc_cen=True, savefig=False,
           name_append='', overlay_pts=False)
 
+#%%
+import nearbyNuggets.analysis.structParams as structParams
+from nearbyNuggets.toolbox.utils import median_pos
+
+# NOTE: Once you've run this, it is immutable. Maybe I don't want the radius cut to go in the "entire catalog" object?
+# rcat.radiusFlag(sc_bins[dwarfcands][2], 2.0)
+
+sc_test = median_pos(sc_dat[rcat.radiusFlag & rcat.isstarFlag & rcat.rgbFlag])
+
+struct_params = structParams.mlStructParams(sc_test, rcat, 3.0, rcat.rgbFlag,
+                                            rcat.isstarFlag)
