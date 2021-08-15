@@ -1,6 +1,7 @@
 import numpy as np
 import astropy.units as u
 from astropy.coordinates import SkyCoord
+from astropy.io import fits
 
 
 # Function used to fit completeness vs. mag in Martin+2016 (PAndAS)
@@ -58,3 +59,26 @@ def median_pos(sc_inp):
 def rh_arcmin_to_pc(rh_arcmin, dist):
     rh_pc = (dist*1e3)*((rh_arcmin*u.arcmin).to(u.rad))
     return rh_pc
+
+
+def whichPatch(position, patchlist):
+    """ Figure out which patch a given position appears in
+
+    Parameters
+    ----------
+    position : `SkyCoord`
+        Astropy SkyCoord object with the position to look up
+    patchlist : `string`
+        Path to the FITS file with RA, Dec limits of each patch
+    """
+
+    hdulist = fits.open(patchlist)
+    patch_dat = hdulist[1].data
+
+    ratmp = position.ra.value
+    dectmp = position.dec.value
+    # NOTE: ramin/ramax are backwards?
+    matchpatch = np.where((patch_dat['ramax'] < ratmp) & (patch_dat['ramin'] > ratmp) &
+                          (patch_dat['decmin'] < dectmp) & (patch_dat['decmax'] > dectmp))
+
+    return patch_dat[matchpatch]['patch'][0]

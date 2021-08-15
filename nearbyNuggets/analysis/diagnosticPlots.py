@@ -333,7 +333,7 @@ def plotcand6(sc_inp, cat, i, nsig,
                extent=[0, xy_pix_size, 0, xy_pix_size], cmap='gray')
 
     if savefig:
-        savefile = 'fakesearch_blue/cand_diagnostic_plots_4panel_withfakes_'+name_append+'.png'
+        savefile = 'cand_diagnostic_plots_6panel_'+name_append+'.png'
         plt.savefig(savefile, dpi=180)
         print('Saved figure to ', savefile, '. Rename to avoid overwriting.')
 
