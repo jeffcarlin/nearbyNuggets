@@ -10,7 +10,8 @@ import img_scale
 
 def rgbCutout(rimg, gimg, bimg, cenCoord, cutout_size, savefig=False,
               outputFileName='', emptyG=False,
-              rmax=0.6, gmax=0.9, bmax=0.75):
+              rmax=0.6, gmax=0.9, bmax=0.75,
+              rmin=0.1, gmin=0.1, bmin=0.1):
     """ Cutout RGB image
 
     Parameters
@@ -123,9 +124,9 @@ def rgbCutout(rimg, gimg, bimg, cenCoord, cutout_size, savefig=False,
     vmin_b, vmax_b = zscale.get_limits(cutout_b.data)
 
     img = np.zeros((cutout_r.shape[0], cutout_r.shape[1], 3), dtype=float)
-    img[:, :, 0] = img_scale.linear(cutout_r.data, scale_min=0.1*vmin_r, scale_max=rmax*vmax_r)
-    img[:, :, 1] = img_scale.linear(cutout_g.data, scale_min=0.1*vmin_g, scale_max=gmax*vmax_g)
-    img[:, :, 2] = img_scale.linear(cutout_b.data, scale_min=0.1*vmin_b, scale_max=bmax*vmax_b)
+    img[:, :, 0] = img_scale.linear(cutout_r.data, scale_min=rmin*vmin_r, scale_max=rmax*vmax_r)
+    img[:, :, 1] = img_scale.linear(cutout_g.data, scale_min=gmin*vmin_g, scale_max=gmax*vmax_g)
+    img[:, :, 2] = img_scale.linear(cutout_b.data, scale_min=bmin*vmin_b, scale_max=bmax*vmax_b)
 
     #    x_rgb, y_rgb = w.all_world2pix(ra[dwarf_msk & isstar & isofilt], dec[dwarf_msk & isstar & isofilt], 0)
     #    x_rgb, y_rgb = w.all_world2pix(ra[dwarf_msk & isstar & rgbbox], dec[dwarf_msk & isstar & rgbbox], 0)
