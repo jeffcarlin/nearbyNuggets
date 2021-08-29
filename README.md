@@ -20,7 +20,9 @@ mining:
 
 analysis:
 - X Candidate diagnostic plots
-- O Estimate structural parameters for candidates
+- X Estimate structural parameters for candidates
+  - X Max likelihood
+  - X MCMC
 - O Estimate luminosities for candidates
 - O TRGB distance estimates
 - O (Isochrone-based) [Fe/H] estimates
