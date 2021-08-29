@@ -32,6 +32,5 @@ other:
 - O CMD plotting function? Other plotting functions?
 - O Generate fake dwarfs
 - O Photometric completeness, bias, etc. from AST analysis
-- O Image cutouts
+- X Image cutouts
 - O Surface/aperture photometry?
-
