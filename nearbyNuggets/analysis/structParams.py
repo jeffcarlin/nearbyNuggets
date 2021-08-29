@@ -1,12 +1,8 @@
 import numpy as np
 import emcee
-import corner
-from astropy.io import fits, ascii
 from astropy.coordinates import SkyCoord
 import astropy.units as u
 from astropy.table import Table
-import matplotlib.pyplot as plt
-from scipy.interpolate import interp1d
 from scipy.optimize import minimize
 from nearbyNuggets.toolbox.utils import median_interval
 
@@ -293,9 +289,7 @@ def mcmcStructParams(sc_inp, cat, rad,
 
     par0 = [sc_inp.ra.value, sc_inp.dec.value, ellip0, theta0, rh0, sigmab0]
 
-    ndim, nwalkers = len(par0), 100
-    nthreads, nsamples = 16, 10000
-    nburn = 1000
+    ndim = len(par0)
     pos = [par0 + 1e-4*np.random.randn(ndim) for i in range(nwalkers)]
 
     sampler = emcee.EnsembleSampler(nwalkers, ndim, lnprob,
@@ -314,19 +308,12 @@ def mcmcStructParams(sc_inp, cat, rad,
     rh_fit, [rh_fit_min, rh_fit_max] = median_interval(samples[:, 4])
     sigmab_fit, [sigmab_fit_min, sigmab_fit_max] = median_interval(samples[:, 5])
 
-    # scmean = SkyCoord(ra=ra_fit*u.deg, dec=dec_fit*u.deg)
     ra_plus = ra_fit_max-ra_fit
     ra_minus = ra_fit-ra_fit_min
     dec_plus = dec_fit_max-dec_fit
     dec_minus = dec_fit-dec_fit_min
     ra_err = np.mean(np.abs([ra_plus, ra_minus]))*u.deg*np.cos(dec_fit*u.deg)
     dec_err = np.mean(np.abs([dec_plus, dec_minus]))*u.deg
-#    rh_plus = rh_fit_max-rh_fit
-#    rh_minus = rh_fit-rh_fit_min
-#    rh_err = np.mean(np.abs([rh_plus, rh_minus]))
-#    theta_plus = theta_fit_max-theta_fit
-#    theta_minus = theta_fit-theta_fit_min
-#    theta_err = np.mean(np.abs([theta_plus, theta_minus]))
 
     ellip_err = np.mean(np.abs([ellip_fit_max-ellip_fit, ellip_fit-ellip_fit_min]))
     theta_err = np.mean(np.abs([theta_fit_max-theta_fit, theta_fit-theta_fit_min]))
