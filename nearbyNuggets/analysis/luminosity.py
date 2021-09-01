@@ -36,7 +36,9 @@ def totLum(sc_inp, cat, rh, gmagbins, gerr_medians, imagbins, ierr_medians,
     dmod  : `float`
         distance modulus
 
+    TO ADD:
     nsamples ???
+    completeness coeffs
     """
 
     sc_all = SkyCoord(ra=cat.dat['ra']*u.radian, dec=cat.dat['dec']*u.radian, frame='icrs')
