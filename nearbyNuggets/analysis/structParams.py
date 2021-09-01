@@ -41,7 +41,7 @@ def ln_likelihood(params, ra, dec, rad):
     lnP = np.sum(np.log(sigmabreal + term1 * term2c))
     min_lnp = -1.0 * lnP
 
-    #if not np.isfinite(min_lnp):
+    # if not np.isfinite(min_lnp):
     #    return -np.inf
 
     return min_lnp
@@ -85,7 +85,7 @@ def ln_like(params, ra, dec):
 
     lnP = np.sum(np.log(sigmabreal + term1*term2c))
 
-    #if not np.isfinite(lnP):
+    # if not np.isfinite(lnP):
     #    return -np.inf
 
     return lnP
@@ -203,7 +203,7 @@ def mlStructParams(sc_inp, cat, rad,
     dec_cand = dec[spatial_msk_tmp & star_flag & cmdsel_flag]
 
     # if cen0 is None:
-        # cen0 = SkyCoord(ra=np.median(cat.dat['ra'])*u.radian,
+    #     cen0 = SkyCoord(ra=np.median(cat.dat['ra'])*u.radian,
     #                 dec=np.median(cat.dat['dec'])*u.radian, frame='icrs')
 
     # sc_all = SkyCoord(ra=cat.dat['ra']*u.radian, dec=cat.dat['dec']*u.radian, frame='icrs')

@@ -8,7 +8,7 @@ import operator
 
 
 class photomCat:
-    def __init__(self, catalogPath):
+    def __init__(self, catalogPath, crapFilt=False):
         self.catalog = catalogPath
 
         # Assumes data are outputs from the LSST stack.
@@ -19,11 +19,16 @@ class photomCat:
 
         hdulist = fits.open(self.catalog)
         dat = hdulist[1].data
-        # filter out crap detections:
-        datfilt = (np.abs(dat['gmag_bgfix']) < 29) & (np.abs(dat['imag_bgfix']) < 29) &\
-                  (dat['gmag_bgfix']-dat['imag_bgfix'] > -1.2) & (dat['gmag_bgfix']-dat['imag_bgfix'] < 4.0)
 
-        self.dat = Table(dat[datfilt])
+        if crapFilt:
+            # filter out crap detections:
+            datfilt = (np.abs(dat['gmag_bgfix']) < 29) & (np.abs(dat['imag_bgfix']) < 29) &\
+                      (dat['gmag_bgfix']-dat['imag_bgfix'] > -1.2) &\
+                      (dat['gmag_bgfix']-dat['imag_bgfix'] < 4.0)
+            self.dat = Table(dat[datfilt])
+        else:
+            self.dat = Table(dat)
+
         hdulist.close()
         # In [2]: rcat = readwrite.photomCat('/Users/jcarlin/Dropbox/local_volume_dw
         # ...: arfs/ngc2403//catalogs_dec2020/fake_dwarfs/cat_jan2021_fakedwarfs_NGC240
