@@ -34,7 +34,7 @@ class photomCat:
         # ...: arfs/ngc2403//catalogs_dec2020/fake_dwarfs/cat_jan2021_fakedwarfs_NGC240
         # ...: 3.fits.gz')
 
-    def extinctionCorr(self, units=u.radian):
+    def setExtinctionCorr(self, units=u.radian):
         coords = SkyCoord(self.dat['ra']*units, self.dat['dec']*units, frame='icrs')
 
         sfd = SFDQuery()
@@ -44,12 +44,12 @@ class photomCat:
         self.dat['a_g'] = 3.172*ebv
         self.dat['a_i'] = 1.682*ebv
 
-    def radiusFlag(self, sc_cen, rad_arcmin, radec_units=u.radian):
+    def setRadiusFlag(self, sc_cen, rad_arcmin, radec_units=u.radian):
         coords = SkyCoord(self.dat['ra']*radec_units, self.dat['dec']*radec_units, frame='icrs')
         spatial_msk_tmp = coords.separation(sc_cen) < (rad_arcmin*u.arcmin)
         self.radiusFlag = spatial_msk_tmp
 
-    def starGalFlag(self):
+    def setStarGalFlag(self):
         # Star-galaxy separation:
 
         # fractional error in flux:

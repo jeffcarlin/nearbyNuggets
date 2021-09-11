@@ -17,19 +17,19 @@ import nearbyNuggets.inputCatalogs.photomCat as pcat
 #tmpcat = rcat.dat[330:430]
 #tmpcat.write('testcat.fits')
 
-rcat = pcat.photomCat('testcat_fake573.fits')
+rcat = pcat.photomCat('testcat_fake573.fits', crapFilt=True)
 rcat.calcColumn(q1='gmag_bgfix', q2='imag_bgfix', colname='gi_bgfix', op='-')
 
 # rcat.rgbBoxFilter(colorColumn='gi_bgfix', magColumn='imag_bgfix')
 
-rcat.extinctionCorr(units=u.radian)
+rcat.setExtinctionCorr(units=u.radian)
 
 rcat.calcColumn(q1='gmag_bgfix', q2='a_g', colname='g0_bgfix', op='-')
 rcat.calcColumn(q1='imag_bgfix', q2='a_i', colname='i0_bgfix', op='-')
 rcat.calcColumn(q1='g0_bgfix', q2='i0_bgfix', colname='gi0_bgfix', op='-')
 
 rcat.rgbBoxFilter(colorColumn='gi0_bgfix', magColumn='i0_bgfix')
-rcat.starGalFlag()
+rcat.setStarGalFlag()
 
 rcat.dat[rcat.isstarFlag & rcat.rgbFlag]
 
@@ -105,10 +105,13 @@ plotcand6(sc_bins[dwarfcands][2], rcat, 0, nsig_bins[dwarfcands][2],
 import nearbyNuggets.analysis.structParams as structParams
 from nearbyNuggets.toolbox.utils import median_pos
 
-# NOTE: Once you've run this, it is immutable. Maybe I don't want the radius cut to go in the "entire catalog" object?
-# rcat.radiusFlag(sc_bins[dwarfcands][2], 2.0)
+rcat.setRadiusFlag(sc_bins[dwarfcands][2], 2.0)
 
 sc_test = median_pos(sc_dat[rcat.radiusFlag & rcat.isstarFlag & rcat.rgbFlag])
 
 struct_params = structParams.mlStructParams(sc_test, rcat, 3.0, rcat.rgbFlag,
                                             rcat.isstarFlag)
+
+struct_params_mcmc = structParams.mcmcStructParams(sc_test, rcat, 3.0, rcat.rgbFlag,
+                                                   rcat.isstarFlag, nsamples=1000, nburn=100)
+
