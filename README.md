@@ -16,7 +16,7 @@ inputCatalogs:
 mining:
 - X Calculate binned number counts on the sky (and related statistics)
     - O Scale stars by their completeness weights to create a "normalized" density map
-- O Detect candidate overdensities
+- X Detect candidate overdensities
 
 analysis:
 - X Candidate diagnostic plots
@@ -29,10 +29,13 @@ analysis:
 - O Surface density profiles
     - O Sersic, exponential, King model fits
 
+foolsGold:
+- O Create catalog of fake stars to inject
+- O Photometric completeness, bias, etc. from AST analysis
+- O Create catalog of fake dwarfs to inject
+
 other:
 - O Read and overplot isochrones
 - O CMD plotting function? Other plotting functions?
-- O Generate fake dwarfs
-- O Photometric completeness, bias, etc. from AST analysis
 - X Image cutouts
 - O Surface/aperture photometry?
