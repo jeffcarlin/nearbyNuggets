@@ -16,6 +16,22 @@ def completenessMag(comp, mag50, rho, a):
     return mag50 + rho * np.log(a / comp - 1)
 
 
+def distToDmod(dist):
+    """
+    Convert distance to distance modulus.
+
+    Parameters
+    ----------
+    distance  : in pc
+
+    Returns
+    -------
+    dmod  : distance modulus
+
+    """
+    return 5.0*np.log10(dist)-5.0
+
+
 def median_interval(data, alpha=0.32):
     """
     Median including Bayesian credible interval.

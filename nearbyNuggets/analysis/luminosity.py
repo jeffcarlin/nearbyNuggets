@@ -2,13 +2,14 @@ import numpy as np
 from astropy.coordinates import SkyCoord
 import astropy.units as u
 from astropy.table import Table
-from astropy.io import fits
+from astropy.io import ascii
+import nearbyNuggets.inputCatalogs.photomCat as pcat
 from nearbyNuggets.toolbox.utils import completenessFunction
 from scipy.interpolate import interp1d
 
 
 def totLum(sc_inp, cat, rh, gmagbins, gerr_medians, imagbins, ierr_medians,
-           cmdsel_flag, star_flag, dmod):
+           cmdsel_flag, star_flag, dmod, nstars, nstars_err):
     # Estimate the total luminosity:
     """ Calculate the structural parameters of a candidate dwarf using
         a maximum likelihood method + MCMC
@@ -35,6 +36,10 @@ def totLum(sc_inp, cat, rh, gmagbins, gerr_medians, imagbins, ierr_medians,
         array of boolean flag values to select point sources (i.e., stars)
     dmod  : `float`
         distance modulus
+    nstars  : `float`
+        number of stars in the dwarf; from structural parameters fit
+    nstars_err  : `float`
+        uncertainty on number of stars in dwarf
 
     TO ADD:
     nsamples ???
@@ -124,19 +129,19 @@ def totLum(sc_inp, cat, rh, gmagbins, gerr_medians, imagbins, ierr_medians,
 
     # Convolve the fake dwarf with errors from data
     rng = np.random.default_rng()
-    rand_norm_g = rng.normal(0.0, 1.0, len(fakeCat['g']))
+    rand_norm_g = rng.normal(0.0, 1.0, len(fakeCat.dat['g']))
     # fake_err_g = rand_norm_g*gerr_interp(fake_g0)
-    rand_norm_i = rng.normal(0.0, 1.0, len(fakeCat['i']))
+    rand_norm_i = rng.normal(0.0, 1.0, len(fakeCat.dat['i']))
     # fake_err_i = rand_norm_i*ierr_interp(fake_i0)
 
     # fake_g = fake_g0+fake_err_g
     # fake_i = fake_i0+fake_err_i
     # fake_gi = fake_g-fake_i
 
-    fakeCat.dat.add_column(fakeCat.dat['g']*gerr_interp[fakeCat.dat['g']], name='fake_err_g')
-    fakeCat.dat.add_column(fakeCat.dat['i']*gerr_interp[fakeCat.dat['i']], name='fake_err_i')
-    fakeCat.dat.add_column(fakeCat.dat['g']+fakeCat.dat['fake_err_g']], name='fake_g')
-    fakeCat.dat.add_column(fakeCat.dat['i']+fakeCat.dat['fake_err_i']], name='fake_i')
+    fakeCat.dat.add_column(rand_norm_g*gerr_interp(fakeCat.dat['g']), name='fake_err_g')
+    fakeCat.dat.add_column(rand_norm_i*ierr_interp(fakeCat.dat['i']), name='fake_err_i')
+    fakeCat.dat.add_column(fakeCat.dat['g']+fakeCat.dat['fake_err_g'], name='fake_g')
+    fakeCat.dat.add_column(fakeCat.dat['i']+fakeCat.dat['fake_err_i'], name='fake_i')
 
     # fakeCat.calcColumn(q1='g', q2='i', colname='fake_err_g', )
     # fakeCat.calcColumn(q1='gmag_bgfix', q2='imag_bgfix', colname='gi_bgfix', op='-')
@@ -156,10 +161,14 @@ def totLum(sc_inp, cat, rh, gmagbins, gerr_medians, imagbins, ierr_medians,
 # fake_g_rgb = fake_g[rgbbox_fake]
 # fake_i_rgb = fake_i[rgbbox_fake]
 
-    fake_g_rgb = fakeCat.dat[fakeCat.rgbFlag]['fake_g']
-    fake_i_rgb = fakeCat.dat[fakeCat.rgbFlag]['fake_i']
+    fake_rgb = fakeCat.dat[fakeCat.rgbFlag]
+    fake_g_rgb = fake_rgb['fake_g']
+    fake_i_rgb = fake_rgb['fake_i']
 
-    nsamples = 10000
+    # print('fake_g: ', fakeCat.dat['fake_g'])
+    # print('Shape of fake_g_rgb: ', fake_g_rgb.shape)
+
+    nsamples = 100 #00
 
     lum_samp_g = []
     magref_samp_g = []
@@ -171,7 +180,7 @@ def totLum(sc_inp, cat, rh, gmagbins, gerr_medians, imagbins, ierr_medians,
         # Apply a scatter in the number of stars of +/-nstars_err:
         #    The factor of 2 accounts for the stars being within the half-light radius
     #    samp_ind = rng.choice(fake_g_rgb.shape[0], np.int(2*nstars_fit*completeness_factor+(nstars_err*rng.normal(0, 1))))
-        samp_ind = rng.choice(fake_g_rgb.shape[0], np.int(nstars_fit*completeness_factor+(nstars_err*rng.normal(0, 1))))
+        samp_ind = rng.choice(fake_g_rgb.shape[0], np.int(nstars*completeness_factor+(nstars_err*rng.normal(0, 1))))
         # samp_ind = rng.choice(fake_g_rgb.shape[0], np.int(nstars_fit+(nstars_err*rng.normal(0, 1))))
         nsamp.append(len(samp_ind))
 
@@ -191,28 +200,27 @@ def totLum(sc_inp, cat, rh, gmagbins, gerr_medians, imagbins, ierr_medians,
     mtot_g = magref_samp_g-2.5*np.log10(lum_samp_g)-dmod
     mtot_i = magref_samp_i-2.5*np.log10(lum_samp_i)-dmod
 
-#%%
-'''
-# number of stars between min/max g mag of RGB box in LF:
-lfmsk = (g_lf > np.min(fake_g[rgbbox_fake])) & (g_lf < np.max(fake_g[rgbbox_fake]))
+    lf_marigo = ascii.read('/Users/jcarlin/Dropbox/local_volume_dwarfs/dwarfsample_code/dwarfsample/n2403/lf_marigo_age10gyr_feh_m2p0_HSC.dat', header_start=12)
 
-# Correct for the fraction of luminosity that is below the limiting magnitude:
-totlum_lf_rgb = np.sum(n_per_bin[lfmsk]*lumg_lf[lfmsk])
-totlum_lf_all = np.sum(n_per_bin*lumg_lf)
+# # number of stars between min/max g mag of RGB box in LF:
+# lfmsk = (g_lf > np.min(fake_g[rgbbox_fake])) & (g_lf < np.max(fake_g[rgbbox_fake]))
 
-lum_corr_fact = totlum_lf_all/totlum_lf_rgb
+# # Correct for the fraction of luminosity that is below the limiting magnitude:
+# totlum_lf_rgb = np.sum(n_per_bin[lfmsk]*lumg_lf[lfmsk])
+# totlum_lf_all = np.sum(n_per_bin*lumg_lf)
 
-mtot_g_corr = magref_samp_g-2.5*np.log10(np.array(lum_samp_g)*lum_corr_fact)-dmod
-mtot_i_corr = magref_samp_i-2.5*np.log10(np.array(lum_samp_i)*lum_corr_fact)-dmod
+# lum_corr_fact = totlum_lf_all/totlum_lf_rgb
 
-'''
+# mtot_g_corr = magref_samp_g-2.5*np.log10(np.array(lum_samp_g)*lum_corr_fact)-dmod
+# mtot_i_corr = magref_samp_i-2.5*np.log10(np.array(lum_samp_i)*lum_corr_fact)-dmod
+
 # Next:
 # 3. Calculate N realizations of the observed dwarf by sampling the fake dwarf N times, with the
 #      number of stars in the sample equal to ncand+/-e_ncand.
 # 4. Correct for the luminosity below the mag cutoff to get the "total" luminosity.
 # QQQ: Do we need to shift up/down for distance uncertainty?
 
-    lf_marigo = ascii.read('/Users/jcarlin/Dropbox/local_volume_dwarfs/dwarfsample_code/dwarfsample/n2403/lf_marigo_age10gyr_feh_m2p0_HSC.dat', header_start=12)
+    # lf_marigo = ascii.read('/Users/jcarlin/Dropbox/local_volume_dwarfs/dwarfsample_code/dwarfsample/n2403/lf_marigo_age10gyr_feh_m2p0_HSC.dat', header_start=12)
 
 #n_per_bin = 10.0**lf_logdn
 #g_lf = lf_gmag+dmod

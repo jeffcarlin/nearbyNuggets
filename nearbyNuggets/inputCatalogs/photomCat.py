@@ -111,6 +111,8 @@ class photomCat:
         else:
             print('Input magnitude/color columns do not exist in the catalog.')
 
+
+'''
     def medianMagErrors(self, magbinsize=0.2, minmag=17.0, maxmag=29.0,
                         magColumn='i0_bgfix', errColumn='ierr'):
         # Calculate the median mag errors as a function of magnitude:
@@ -124,3 +126,4 @@ class photomCat:
 
         self.magErrBins = magbin_centers
         self.magErrMedians = mederr
+'''

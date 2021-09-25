@@ -33,9 +33,9 @@ rcat.setStarGalFlag()
 
 rcat.dat[rcat.isstarFlag & rcat.rgbFlag]
 
-rcat.medianMagErrors(magColumn='g0_bgfix', errColumn='gerr')
-magbins = rcat.magErrBins
-gerr_medians = rcat.magErrMedians
+#rcat.medianMagErrors(magColumn='g0_bgfix', errColumn='gerr')
+#magbins = rcat.magErrBins
+#gerr_medians = rcat.magErrMedians
 
 '''
 #%%
@@ -103,15 +103,33 @@ plotcand6(sc_bins[dwarfcands][2], rcat, 0, nsig_bins[dwarfcands][2],
 
 #%%
 import nearbyNuggets.analysis.structParams as structParams
-from nearbyNuggets.toolbox.utils import median_pos
+# from nearbyNuggets.toolbox.utils import median_pos
+import nearbyNuggets.toolbox.utils as nn_utils
 
 rcat.setRadiusFlag(sc_bins[dwarfcands][2], 2.0)
 
-sc_test = median_pos(sc_dat[rcat.radiusFlag & rcat.isstarFlag & rcat.rgbFlag])
+sc_test = nn_utils.median_pos(sc_dat[rcat.radiusFlag & rcat.isstarFlag & rcat.rgbFlag])
 
 struct_params = structParams.mlStructParams(sc_test, rcat, 3.0, rcat.rgbFlag,
                                             rcat.isstarFlag)
 
 struct_params_mcmc = structParams.mcmcStructParams(sc_test, rcat, 3.0, rcat.rgbFlag,
                                                    rcat.isstarFlag, nsamples=1000, nburn=100)
+
+#%%
+import nearbyNuggets.analysis.luminosity as lumin
+import nearbyNuggets.inputCatalogs.characterize as charData
+
+gmagbins, gerr_medians = charData.getMedianMagErrors(rcat, magColumn='g0_bgfix', errColumn='gerr')
+imagbins, ierr_medians = charData.getMedianMagErrors(rcat, magColumn='i0_bgfix', errColumn='ierr')
+
+sc_cen_mcmc = SkyCoord(ra=struct_params_mcmc['ra']*u.deg, dec=struct_params_mcmc['dec']*u.deg, frame='icrs')
+
+dmod = nn_utils.distToDmod(3.2e6)
+
+lumin.totLum(sc_cen_mcmc, rcat, struct_params_mcmc['rhalf'], gmagbins, gerr_medians,
+             imagbins, ierr_medians, rcat.rgbFlag, rcat.isstarFlag, dmod,
+             struct_params_mcmc['nstars'], struct_params_mcmc['nstars_err'])
+
+
 
