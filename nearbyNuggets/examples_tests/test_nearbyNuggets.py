@@ -58,17 +58,21 @@ from nearbyNuggets.mining.findNuggets import densityMap, makeBins, densityBinSta
 sc_dat = SkyCoord(ra=rcat.dat['ra']*u.radian, dec=rcat.dat['dec']*u.radian, frame='icrs')
 
 meanSC = SkyCoord(ra=np.mean(rcat.dat['ra'])*u.radian, dec=np.mean(rcat.dat['dec']*u.radian), frame='icrs')
-ra_bins, dec_bins = makeBins(sc_dat, binsize=0.1*u.arcmin)
+ra_bins, dec_bins, ra_bin_centers, dec_bin_centers = makeBins(sc_dat, binsize=0.1*u.arcmin)
 binCounts = densityMap(sc_dat[rcat.isstarFlag & rcat.rgbFlag], ra_bins, dec_bins)
 
 # 2D histogram of all detected objects in the catalog (to be used for masking places with no data)
 binCounts_all = densityMap(sc_dat, ra_bins, dec_bins)
 
 #%%
-nsig_bins, std_bins, bg_bins, bgareafrac_bins = densityBinStats(binCounts, ra_bins, dec_bins, binned_counts_all=binCounts_all)
+nsig_bins, std_bins, bg_bins, bgareafrac_bins, counts_bins = densityBinStats(binCounts, ra_bins, dec_bins, 
+                                                                             binned_counts_all=binCounts_all)
 
 nsig_bins_img = binsToImage(nsig_bins, binCounts)
 bg_bins_img = binsToImage(bg_bins, binCounts)
+std_bins_img = binsToImage(std_bins, binCounts)
+bincounts_img = binsToImage(counts_bins, binCounts)
+bgareafrac_bins_img = binsToImage(bgareafrac_bins, binCounts)
 
 #%%
 # Replace NaN and Infinite values with -9.99:
@@ -90,6 +94,21 @@ sep_bins_ddo44 = sc_bins.separation(ddo44cen)
 dwarfcand_select = np.where((nsig_bins[sorted_bins] > sigthresh))# & (bgareafrac_bins[sorted_bins] > 0.2))# \
 #                            & (sep_bins_n2403[sorted_bins].arcmin > 1.0) & (sep_bins_ddo44[sorted_bins].arcmin > 2.0))
 dwarfcands = sorted_bins[dwarfcand_select]
+
+#%%
+from nearbyNuggets.mining.findNuggets import pickNuggets, getPeaks
+
+dwarfcands2 = pickNuggets(counts_bins, nsig_bins, bgareafrac_bins, sigma_thresh=sigthresh)
+
+peaks2 = getPeaks(counts_bins, binCounts, bg_bins, std_bins,
+                  bgareafrac_bins, ra_bin_centers, dec_bin_centers, sigma_thresh=sigthresh)
+#peaks2['ra'] = ra_bin_centers[peaks2['x_peak']]
+#peaks2['dec'] = dec_bin_centers[peaks2['y_peak']]
+#peaks2['sig'] = (peaks2['peak_value']-bg_bins_img[peaks2['y_peak'], peaks2['x_peak']])/std_bins_img[peaks2['y_peak'], peaks2['x_peak']]
+#peaks2['n_in_bin'] = bincounts_img[peaks2['y_peak'], peaks2['x_peak']]
+#peaks2['bg'] = bg_bins_img[peaks2['y_peak'], peaks2['x_peak']]
+#peaks2['bgareafrac'] = bgareafrac_bins_img[peaks2['y_peak'], peaks2['x_peak']]
+#peaks2['std'] = std_bins_img[peaks2['y_peak'], peaks2['x_peak']]
 
 #%%
 from nearbyNuggets.analysis.diagnosticPlots import plotcand6

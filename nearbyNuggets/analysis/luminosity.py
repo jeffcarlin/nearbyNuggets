@@ -249,7 +249,14 @@ def totLum(sc_inp, cat, rh, gmagbins, gerr_medians, imagbins, ierr_medians,
 # V = g_hsc - 0.371*(gi_hsc)-0.068
 
     mv = np.median(mtot_g_corr)-0.371*(np.median(mtot_g_corr)-np.median(mtot_i_corr))-0.068
-    print('M_V: ',mv)
+    print('M_V: ', mv)
+
+    lum_results = Table([[mv], [np.median(mtot_g_corr)], [np.std(mtot_g_corr)],
+                         [np.median(mtot_i_corr)], [np.std(mtot_i_corr)]],
+                        names=['M_V', 'M_g', 'err_M_g', 'M_i', 'err_M_i'])
+
+    return lum_results
+
 
 #%%
 

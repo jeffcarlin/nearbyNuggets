@@ -1,6 +1,8 @@
 from astropy.coordinates import SkyCoord
 import astropy.units as u
 from astropy.stats import sigma_clipped_stats
+from photutils.detection import find_peaks
+from photutils.centroids import centroid_com
 import numpy as np
 
 '''
@@ -75,7 +77,7 @@ def makeBins(sc_dat, binsize=1.5*u.arcmin):
     # Note that the binsize in RA must be corrected for the cos(Dec) term
     binsize_ra = binsize_deg.value/np.cos(meandec*u.deg)
     decrange = np.max(sc_dat.dec.value)-np.min(sc_dat.dec.value)
-    rarange = (np.max(sc_dat.ra.value)-np.min(sc_dat.ra.value))/np.cos(meandec*u.deg)
+    rarange = (np.max(sc_dat.ra.value)-np.min(sc_dat.ra.value))  # /np.cos(meandec*u.deg)
     nbins_dec = int(np.ceil(decrange/binsize.to(u.degree).value))
     nbins_ra = int(np.ceil(rarange/binsize_ra.value))
     if nbins_ra > nbins_dec:
@@ -91,8 +93,10 @@ def makeBins(sc_dat, binsize=1.5*u.arcmin):
     maxdec = np.mean(sc_dat.dec.value)+(nbins/2)*binsize_deg.value
     ra_bins = np.linspace(minra, maxra, nbins)
     dec_bins = np.linspace(mindec, maxdec, nbins)
+    ra_bin_centers = (ra_bins + binsize_ra/2.0).value
+    dec_bin_centers = dec_bins + binsize.to(u.degree).value/2.0
 
-    return (ra_bins, dec_bins)
+    return (ra_bins, dec_bins, ra_bin_centers, dec_bin_centers)
 
 
 def densityMap(sc_dat, ra_bins, dec_bins):
@@ -105,7 +109,7 @@ def densityMap(sc_dat, ra_bins, dec_bins):
     binned_counts, xedges, yedges = np.histogram2d(sc_dat.ra.value, sc_dat.dec.value,
                                                    bins=[ra_bins, dec_bins])
 
-    return binned_counts
+    return binned_counts, xedges, yedges
 
 
 def binsToSkyCoord(ra_bins, dec_bins):
@@ -159,8 +163,8 @@ def densityBinStats(binned_counts, ra_bins, dec_bins, binned_counts_all=None,
     outer_radius = 5.0*binsize
     inner_radius = 2.0*binsize
 
-    bincounts = binned_counts.flatten()
-    bincounts_all = binned_counts_all.flatten()
+    bincounts = binned_counts[0].flatten()
+    bincounts_all = binned_counts_all[0].flatten()
     std_bins = np.copy(bincounts)*0.0
     bg_bins = np.copy(bincounts)*0.0
     bgareafrac_bins = np.copy(bincounts)*0.0
@@ -181,8 +185,49 @@ def densityBinStats(binned_counts, ra_bins, dec_bins, binned_counts_all=None,
         std_bins[i_bin] = stats_tmp[2]  # std. deviation of background
         nsig_bins[i_bin] = (bincounts[i_bin]-bg_bins[i_bin])/std_bins[i_bin]
 
-    return (nsig_bins, std_bins, bg_bins, bgareafrac_bins)
+    return (nsig_bins, std_bins, bg_bins, bgareafrac_bins, bincounts)
+
+
+def pickNuggets(bincounts, nsig_bins, bgareafrac_bins, sigma_thresh=4.5,
+                bgarea_thresh=0.4, numcount_thresh=1):
+    # Replace NaN and Infinite values with -9.99:
+    nsig_bins[np.isnan(nsig_bins)] = -9.99
+    nsig_bins[np.isinf(nsig_bins)] = -9.99
+
+    # Get the indices sorted from highest significance to lowest:
+    sorted_bins = np.flip(np.argsort(nsig_bins))
+
+    # Pick out the ones greater than some threshold "sigma":
+    dwarfcand_select = np.where((nsig_bins[sorted_bins] > sigma_thresh) &
+                                (bgareafrac_bins[sorted_bins] > bgarea_thresh) &
+                                (bincounts[sorted_bins] > numcount_thresh))
+    dwarfcands = sorted_bins[dwarfcand_select]
+
+    return dwarfcands
+
+
+def getPeaks(bincounts, bincounts_map, bgbins, stdbins, bgareafrac_bins,
+             ra_bin_centers, dec_bin_centers, box_size=11, sigma_thresh=3.0):
+
+    binned_counts_img = binsToImage(bincounts, bincounts_map)
+    std_bins_img = binsToImage(stdbins, bincounts_map)
+    bg_bins_img = binsToImage(bgbins, bincounts_map)
+    bgareafrac_bins_img = binsToImage(bgareafrac_bins, bincounts_map)
+
+    peaks_tbl = find_peaks(binned_counts_img, bg_bins_img+sigma_thresh*std_bins_img,
+                           centroid_func=centroid_com, box_size=box_size)
+
+    peaks_tbl['ra'] = ra_bin_centers[peaks_tbl['x_peak']]
+    peaks_tbl['dec'] = dec_bin_centers[peaks_tbl['y_peak']]
+    peaks_tbl['sig'] = (peaks_tbl['peak_value']-bg_bins_img[peaks_tbl['y_peak'], peaks_tbl['x_peak']])/std_bins_img[peaks_tbl['y_peak'], peaks_tbl['x_peak']]
+    peaks_tbl['n_in_bin'] = binned_counts_img[peaks_tbl['y_peak'], peaks_tbl['x_peak']]
+    peaks_tbl['bg'] = bg_bins_img[peaks_tbl['y_peak'], peaks_tbl['x_peak']]
+    peaks_tbl['bgareafrac'] = bgareafrac_bins_img[peaks_tbl['y_peak'], peaks_tbl['x_peak']]
+    peaks_tbl['std'] = std_bins_img[peaks_tbl['y_peak'], peaks_tbl['x_peak']]
+    # tbl['peak_value'].info.format = '%.8g'  # for consistent table output
+
+    return peaks_tbl
 
 
 def binsToImage(binned_array, binned_counts):
-    return binned_array.reshape(np.shape(binned_counts)).T
+    return binned_array.reshape(np.shape(binned_counts[0])).T

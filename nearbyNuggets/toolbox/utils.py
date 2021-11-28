@@ -73,6 +73,15 @@ def median_pos(sc_inp):
 
 
 def rh_arcmin_to_pc(rh_arcmin, dist):
+    """ Convert angular size in arcmin to parsecs at a given distance
+
+    Parameters
+    ----------
+    rh_arcmin : `float`
+        Size in arcminutes
+    dist : `float`
+        Distance to object in kpc
+    """
     rh_pc = (dist*1e3)*((rh_arcmin*u.arcmin).to(u.rad))
     return rh_pc
 
