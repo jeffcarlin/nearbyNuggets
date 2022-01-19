@@ -8,7 +8,8 @@ import operator
 
 
 class photomCat:
-    def __init__(self, catalogPath, crapFilt=False):
+    def __init__(self, catalogPath, crapFilt=False,
+                 gcol='gmag_bgfix', icol='imag_bgfix'):
         self.catalog = catalogPath
 
         # Assumes data are outputs from the LSST stack.
@@ -20,11 +21,17 @@ class photomCat:
         hdulist = fits.open(self.catalog)
         dat = hdulist[1].data
 
+        self.gColumnName = gcol
+        self.iColumnName = icol
+
         if crapFilt:
             # filter out crap detections:
-            datfilt = (np.abs(dat['gmag_bgfix']) < 29) & (np.abs(dat['imag_bgfix']) < 29) &\
-                      (dat['gmag_bgfix']-dat['imag_bgfix'] > -1.2) &\
-                      (dat['gmag_bgfix']-dat['imag_bgfix'] < 4.0)
+            datfilt = (np.abs(dat[self.gColumnName]) < 29) & (np.abs(dat[self.iColumnName]) < 29) &\
+                      (dat[self.gColumnName]-dat[self.iColumnName] > -1.2) &\
+                      (dat[self.gColumnName]-dat[self.iColumnName] < 4.0)
+#           datfilt = (np.abs(dat['gmag_bgfix']) < 29) & (np.abs(dat['imag_bgfix']) < 29) &\
+#                      (dat['gmag_bgfix']-dat['imag_bgfix'] > -1.2) &\
+#                      (dat['gmag_bgfix']-dat['imag_bgfix'] < 4.0)
             self.dat = Table(dat[datfilt])
         else:
             self.dat = Table(dat)
@@ -49,14 +56,20 @@ class photomCat:
         spatial_msk_tmp = coords.separation(sc_cen) < (rad_arcmin*u.arcmin)
         self.radiusFlag = spatial_msk_tmp
 
-    def setStarGalFlag(self):
+    def setStarGalFlag(self, iflux_col='iflux', i_modelflux_col='iflux_cmodel',
+                       ifluxerr_col='ifluxerr', i_modelfluxerr_col='ifluxerr_cmodel'):
         # Star-galaxy separation:
 
         # fractional error in flux:
-        iflux_ratio = self.dat['iflux']/self.dat['iflux_cmodel']
+        # iflux_ratio = self.dat['iflux']/self.dat['iflux_cmodel']
         # gflux_ratio = self.dat['gflux']/self.dat['gflux_cmodel']
-        ifluxerr_frac = self.dat['ifluxerr']/self.dat['iflux']
-        ifluxerr_frac_cmodel = self.dat['ifluxerr_cmodel']/self.dat['iflux_cmodel']
+        # ifluxerr_frac = self.dat['ifluxerr']/self.dat['iflux']
+        # ifluxerr_frac_cmodel = self.dat['ifluxerr_cmodel']/self.dat['iflux_cmodel']
+
+        iflux_ratio = self.dat[iflux_col]/self.dat[i_modelflux_col]
+        # gflux_ratio = self.dat['gflux']/self.dat['gflux_cmodel']
+        ifluxerr_frac = self.dat[ifluxerr_col]/self.dat[iflux_col]
+        ifluxerr_frac_cmodel = self.dat[i_modelfluxerr_col]/self.dat[i_modelflux_col]
         ierr_frac_combine = iflux_ratio*np.sqrt((ifluxerr_frac)**2 + (ifluxerr_frac_cmodel)**2)
         # gerr_frac_combine = gflux_ratio*np.sqrt((gfluxerr/gflux)**2 + (gfluxerr_cmodel/gflux_cmodel)**2)
         nsig_stargx = 0.5  # 0.5
@@ -68,6 +81,10 @@ class photomCat:
         # i-band only:
         isstar = (np.abs(iflux_ratio-1.0) < (nsig_stargx*ierr_frac_combine+locus_width))
         self.isstarFlag = isstar
+
+    def setMagColumnNames(self, gcol='gmag_bgfix', icol='imag_bgfix'):
+        self.gColumnName = gcol
+        self.iColumnName = icol
 
     def calcColumn(self, q1=None, q2=None, op='-', colname=''):
         # rcat.calcColumn(q1='gmag_bgfix', q2='imag_bgfix', colname='gi_bgfix', op='-')
@@ -111,6 +128,65 @@ class photomCat:
         else:
             print('Input magnitude/color columns do not exist in the catalog.')
 
+
+def calcIsoDist(self, iso, colorColumn='gi0_bgfix', magColumn='i0_bgfix'):
+    """
+    Calculate the distance (in color/mag) of all objects from an input
+    isochrone.
+
+    Parameters
+    ----------
+    iso : np.array
+        Isochrone to filter on
+
+    Returns
+    -------
+    mstars : `float`
+        Stellar mass of the satellite in solar masses
+
+    """
+# (magcolor):
+#    magn,color=magcolor
+
+## isochrone #################
+##EEP   M/Mo    LogTeff  LogG   LogL/Lo open    gp1     rp1     ip1     zp1     yp1     wp1
+#
+## For now, hard-code the input file. Later, write a more general function
+## for the entire isochrone library.
+
+# Isochrone:
+    iso_dat = ascii.read('MIST_iso_5af4b574f2824.iso.cmd.edit')
+    ms_rgb = (iso_dat['phase'] <= 2.0) # phase(MS)=1, phase(RGB)=2
+    abs_i_iso = np.array(iso_dat['PS_i'][ms_rgb])
+    abs_g_iso = np.array(iso_dat['PS_g'][ms_rgb])
+
+#    abs_i_iso=iso_imag #-(5.0*np.log10(dist7078))+5.0-ai7078
+#    abs_g_iso=iso_gmag #-(5.0*np.log10(dist7078))+5.0-ag7078
+
+    gi_iso = abs_g_iso-abs_i_iso
+
+    # sort them so they are monotonically increasing (or spline interp fails)
+    abs_i_iso, gi_iso = zip(*sorted(zip(abs_i_iso, gi_iso)))
+
+    # spline interpolate the isochrone
+    tck=interpolate.splrep(abs_i_iso,gi_iso,s=0)
+    yy=np.arange(np.min(abs_i_iso),np.max(abs_i_iso),0.01)
+    xx=interpolate.splev(yy,tck,der=0)
+
+#    print('color=')
+#    print(inpcolor)
+
+    isodist=[]
+
+    for i in range(len(magn)):
+        # first check "main" (MS and RGB) part of isochrone:
+        isodist_msrgb=np.min(np.sqrt((color[i]-xx)**2 + (magn[i]-yy)**2))
+       #isodist=np.append(isodist,np.min(np.sqrt((col[i]-xx)**2 + (mag[i]-yy)**2)))
+        # keep whichever one has the lowest value:
+#        isodisttmp= isodist_msrgb if (isodist_msrgb<isodist_bhb) else isodist_bhb
+        isodist=np.append(isodist,isodist_msrgb)
+
+    return isodist
 
 '''
     def medianMagErrors(self, magbinsize=0.2, minmag=17.0, maxmag=29.0,

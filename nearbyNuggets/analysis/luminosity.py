@@ -96,7 +96,8 @@ def totLum(sc_inp, cat, rh, gmagbins, gerr_medians, imagbins, ierr_medians,
 # popt_i_andxxii
 # Out[84]: array([26.32611259,  0.58590768,  0.98660214])
 
-    completeness_coeffs_g = [26.06899642, 0.83617971, 1.00940663]
+    # completeness_coeffs_g = [26.06899642,  0.83617971,  1.00940663]
+    completeness_coeffs_g = [27.6565135, 0.47099452, 0.96815609]
 
     lf_bins = np.arange(22, 29, 0.1)
 

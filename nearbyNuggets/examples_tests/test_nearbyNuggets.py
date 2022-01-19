@@ -9,7 +9,7 @@ from astropy.coordinates import SkyCoord
 #import operator
 
 # the mock-0.3.1 dir contains testcase.py, testutils.py & mock.py
-sys.path.append('/Users/jcarlin/nearbyNuggets/')
+sys.path.append('/Users/jcarlin/repos/nearbyNuggets/')
 
 import nearbyNuggets.inputCatalogs.photomCat as pcat
 
@@ -58,7 +58,7 @@ from nearbyNuggets.mining.findNuggets import densityMap, makeBins, densityBinSta
 sc_dat = SkyCoord(ra=rcat.dat['ra']*u.radian, dec=rcat.dat['dec']*u.radian, frame='icrs')
 
 meanSC = SkyCoord(ra=np.mean(rcat.dat['ra'])*u.radian, dec=np.mean(rcat.dat['dec']*u.radian), frame='icrs')
-ra_bins, dec_bins, ra_bin_centers, dec_bin_centers = makeBins(sc_dat, binsize=0.1*u.arcmin)
+ra_bins, dec_bins, ra_bin_centers, dec_bin_centers = makeBins(sc_dat, binsize=1.0*u.arcmin)
 binCounts = densityMap(sc_dat[rcat.isstarFlag & rcat.rgbFlag], ra_bins, dec_bins)
 
 # 2D histogram of all detected objects in the catalog (to be used for masking places with no data)
@@ -129,10 +129,10 @@ rcat.setRadiusFlag(sc_bins[dwarfcands][2], 2.0)
 
 sc_test = nn_utils.median_pos(sc_dat[rcat.radiusFlag & rcat.isstarFlag & rcat.rgbFlag])
 
-struct_params = structParams.mlStructParams(sc_test, rcat, 3.0, rcat.rgbFlag,
+struct_params = structParams.mlStructParams(sc_test, rcat, 2.0, rcat.rgbFlag,
                                             rcat.isstarFlag)
 
-struct_params_mcmc = structParams.mcmcStructParams(sc_test, rcat, 3.0, rcat.rgbFlag,
+struct_params_mcmc = structParams.mcmcStructParams(sc_test, rcat, 2.0, rcat.rgbFlag,
                                                    rcat.isstarFlag, nsamples=1000, nburn=100)
 
 #%%
@@ -146,7 +146,8 @@ sc_cen_mcmc = SkyCoord(ra=struct_params_mcmc['ra']*u.deg, dec=struct_params_mcmc
 
 dmod = nn_utils.distToDmod(3.2e6)
 
-lumin.totLum(sc_cen_mcmc, rcat, struct_params_mcmc['rhalf'], gmagbins, gerr_medians,
+# lumin.totLum(sc_cen_mcmc, rcat, 2*struct_params_mcmc['rhalf'], gmagbins, gerr_medians,
+lumin.totLum(sc_cen_mcmc, rcat, 3.0, gmagbins, gerr_medians,
              imagbins, ierr_medians, rcat.rgbFlag, rcat.isstarFlag, dmod,
              struct_params_mcmc['nstars'], struct_params_mcmc['nstars_err'])
 

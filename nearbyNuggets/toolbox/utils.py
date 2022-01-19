@@ -1,7 +1,7 @@
 import numpy as np
 import astropy.units as u
 from astropy.coordinates import SkyCoord
-from astropy.io import fits
+from astropy.io import fits, ascii
 
 
 # Function used to fit completeness vs. mag in Martin+2016 (PAndAS)
@@ -30,6 +30,59 @@ def distToDmod(dist):
 
     """
     return 5.0*np.log10(dist)-5.0
+
+
+def dmodToDist(dmod):
+    """
+    Convert distance modulus to distance.
+
+    Parameters
+    ----------
+    dmod  : distance modulus
+
+    Returns
+    -------
+    distance  : in pc
+
+    """
+    return 10.0**((dmod+5)/5.0)
+
+
+def getIsochrone(mh=-2.0, msrgb=True):
+    """
+    Get a 10 Gyr Padova isochrone of a given metallicity. Currently uses a
+    hard-coded file of PanSTARRS isochrones for only one age, but could be
+    updated in the future.
+
+    Parameters
+    ----------
+    mh : `float`
+        Requested [M/H]
+
+    msrgb : `bool`
+        Return only the main sequence and RGB?
+
+    Returns
+    -------
+    iso : `np.array`
+
+    """
+    mhvals = [-2.19174, -2.1, -2.0, -1.9, -1.8, -1.7, -1.6, -1.5, -1.4,
+              -1.3, -1.2, -1.1, -1.0, -0.9, -0.8, -0.7, -0.6, -0.5, -0.4,
+              -0.3, -0.2, -0.1, 0.0, 0.1, 0.2, 0.3]
+    if mh not in mhvals:
+        print('Supplied [M/H] value not in list. Use one of these: ', mhvals)
+        return
+    isofile = '/Users/jcarlin/Dropbox/isochrones/padova/panstarrs/output494507502139.dat'
+    iso_all = ascii.read(isofile, header_start=13, data_start=14)
+
+    if msrgb:
+        iso_msrgb = (iso_all['label'] <= 3) & (iso_all['label'] > 0)
+    else:
+        iso_msrgb = (iso_all['label'] < 10)
+
+    iso = (iso_all['MH'] == mh) & iso_msrgb
+    return iso_all[iso]
 
 
 def median_interval(data, alpha=0.32):
@@ -70,6 +123,35 @@ def median_pos(sc_inp):
     sc_out = SkyCoord(ra_out*u.deg, dec_out*u.deg)
 
     return(sc_out)
+
+
+def mstar_from_absmag(m_v):
+    """
+    From an input satellite M_V, calculate the luminosity in solar units.
+    Assuming M*/LV = 1.6 for dSphs (Woo+2008), infer the stellar mass.
+
+    L_V/L_Sun = 10^[(M_V,Sun-M_V)/2.5]
+
+    Parameters
+    ----------
+    m_v : `float`
+        Luminosity (V-band absolute magnitude) of the satellite
+
+    Returns
+    -------
+    mstars : `float`
+        Stellar mass of the satellite in solar masses
+
+    """
+
+    mv_sun = 4.83
+
+    m_to_l = 1.6
+
+    lv = 10.0**((mv_sun-m_v)/2.5)
+    mstars=m_to_l * lv
+
+    return mstars
 
 
 def rh_arcmin_to_pc(rh_arcmin, dist):
