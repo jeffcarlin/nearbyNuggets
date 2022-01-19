@@ -129,65 +129,6 @@ class photomCat:
             print('Input magnitude/color columns do not exist in the catalog.')
 
 
-def calcIsoDist(self, iso, colorColumn='gi0_bgfix', magColumn='i0_bgfix'):
-    """
-    Calculate the distance (in color/mag) of all objects from an input
-    isochrone.
-
-    Parameters
-    ----------
-    iso : np.array
-        Isochrone to filter on
-
-    Returns
-    -------
-    mstars : `float`
-        Stellar mass of the satellite in solar masses
-
-    """
-# (magcolor):
-#    magn,color=magcolor
-
-## isochrone #################
-##EEP   M/Mo    LogTeff  LogG   LogL/Lo open    gp1     rp1     ip1     zp1     yp1     wp1
-#
-## For now, hard-code the input file. Later, write a more general function
-## for the entire isochrone library.
-
-# Isochrone:
-    iso_dat = ascii.read('MIST_iso_5af4b574f2824.iso.cmd.edit')
-    ms_rgb = (iso_dat['phase'] <= 2.0) # phase(MS)=1, phase(RGB)=2
-    abs_i_iso = np.array(iso_dat['PS_i'][ms_rgb])
-    abs_g_iso = np.array(iso_dat['PS_g'][ms_rgb])
-
-#    abs_i_iso=iso_imag #-(5.0*np.log10(dist7078))+5.0-ai7078
-#    abs_g_iso=iso_gmag #-(5.0*np.log10(dist7078))+5.0-ag7078
-
-    gi_iso = abs_g_iso-abs_i_iso
-
-    # sort them so they are monotonically increasing (or spline interp fails)
-    abs_i_iso, gi_iso = zip(*sorted(zip(abs_i_iso, gi_iso)))
-
-    # spline interpolate the isochrone
-    tck=interpolate.splrep(abs_i_iso,gi_iso,s=0)
-    yy=np.arange(np.min(abs_i_iso),np.max(abs_i_iso),0.01)
-    xx=interpolate.splev(yy,tck,der=0)
-
-#    print('color=')
-#    print(inpcolor)
-
-    isodist=[]
-
-    for i in range(len(magn)):
-        # first check "main" (MS and RGB) part of isochrone:
-        isodist_msrgb=np.min(np.sqrt((color[i]-xx)**2 + (magn[i]-yy)**2))
-       #isodist=np.append(isodist,np.min(np.sqrt((col[i]-xx)**2 + (mag[i]-yy)**2)))
-        # keep whichever one has the lowest value:
-#        isodisttmp= isodist_msrgb if (isodist_msrgb<isodist_bhb) else isodist_bhb
-        isodist=np.append(isodist,isodist_msrgb)
-
-    return isodist
-
 '''
     def medianMagErrors(self, magbinsize=0.2, minmag=17.0, maxmag=29.0,
                         magColumn='i0_bgfix', errColumn='ierr'):

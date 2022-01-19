@@ -114,7 +114,7 @@ def densityMap(sc_dat, ra_bins, dec_bins):
 
 def binsToSkyCoord(ra_bins, dec_bins):
     binsize = (dec_bins[2]*u.deg-dec_bins[1]*u.deg).to(u.arcmin)
-    binsize_ra = binsize.value/np.cos(np.mean(dec_bins * u.deg))
+    binsize_ra = (binsize.value/np.cos(np.mean(dec_bins * u.deg)))*u.arcmin
 
     # Create a SkyCoord array for all of the bin centers:
     ra_allbins = []
@@ -122,7 +122,7 @@ def binsToSkyCoord(ra_bins, dec_bins):
 
     for ii in range(len(ra_bins)-1):
         for jj in range(len(dec_bins)-1):
-            ra_allbins = np.append(ra_allbins, (ra_bins[ii]+binsize_ra/2.0))
+            ra_allbins = np.append(ra_allbins, (ra_bins[ii]+binsize_ra.to(u.degree).value/2.0))
             dec_allbins = np.append(dec_allbins, (dec_bins[jj]+binsize.to(u.degree).value/2.0))
 
     sc_allbins = SkyCoord(ra=ra_allbins*u.deg, dec=dec_allbins*u.deg)

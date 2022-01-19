@@ -2,6 +2,55 @@ import numpy as np
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 from astropy.io import fits, ascii
+from scipy import interpolate
+
+
+def calcIsoDist(iso=[], dmod=27.5, data_table=[]):
+    """
+    Calculate the distance (in color/mag) of all objects from an input
+    isochrone.
+
+    Parameters
+    ----------
+    iso : `list` of two `np.array`s
+        Isochrone to filter on -- blue band first, red band second
+
+    dmod : `float`
+        Distance modulus to shift the isochrone to
+
+    data_table : `Astropy.Table`
+        Astropy table object containing two columns, which _must_ be named
+        "gmag" and "imag".
+    Returns
+    -------
+    isodist : `np.array`
+        Array of CMD distance (in mags) of each point from the supplied
+        isochrone.
+    """
+
+    # Isochrone:
+    abs_g_iso, abs_i_iso = iso
+    gi_iso = abs_g_iso - abs_i_iso
+    g_iso = abs_g_iso + dmod
+    i_iso = abs_i_iso + dmod
+
+    # sort them so they are monotonically increasing (or spline interp fails)
+    i_iso, gi_iso = zip(*sorted(zip(i_iso, gi_iso)))
+
+    # spline interpolate the isochrone
+    tck = interpolate.splrep(i_iso, gi_iso, s=0)
+    yy = np.arange(np.min(i_iso), np.max(i_iso), 0.01)
+    xx = interpolate.splev(yy, tck, der=0)
+
+    df = data_table.to_pandas()
+
+    def minDist(df):
+        col = df['gmag'] - df['imag']
+        return np.min(np.sqrt((col-xx)**2 + (df['imag']-yy)**2))
+
+    isodist = df.apply(minDist, axis=1).to_numpy()
+
+    return isodist
 
 
 # Function used to fit completeness vs. mag in Martin+2016 (PAndAS)
