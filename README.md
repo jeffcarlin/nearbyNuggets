@@ -17,6 +17,9 @@ mining:
 - X Calculate binned number counts on the sky (and related statistics)
     - O Scale stars by their completeness weights to create a "normalized" density map
 - X Detect candidate overdensities
+- O Select candidate globular clusters
+    - O At distances where Gaia is useful
+    - O At any distance (not requiring Gaia)
 
 analysis:
 - X Candidate diagnostic plots
