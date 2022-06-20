@@ -9,13 +9,14 @@ inputCatalogs:
 - X Read photometric catalogs
 - X Add information to the catalogs (extinction, etc.)
 - X Filter the catalogs (quality cuts, RGB selection, etc.)
-    - O Isochrone filtering
+    - O RGB "box" filter (written, but move from inputCatalogs to utils?)
+    - X Isochrone filtering (in toolbox/utils)
     - O Matched filtering
 - X Calculate median magnitude error in magnitude bins
 
 mining:
 - X Calculate binned number counts on the sky (and related statistics)
-    - O Scale stars by their completeness weights to create a "normalized" density map
+    - O Scale stars by their completeness weights to create a "normalized" density map (in progress)
 - X Detect candidate overdensities
 - O Select candidate globular clusters
     - O At distances where Gaia is useful
@@ -26,10 +27,10 @@ analysis:
 - X Estimate structural parameters for candidates
   - X Max likelihood
   - X MCMC
-- O Estimate luminosities for candidates
+- O Estimate luminosities for candidates (in progress - just needs clean-up)
 - O TRGB distance estimates
 - O (Isochrone-based) [Fe/H] estimates
-- O Surface density profiles
+- O Fit/overplot surface density profiles
     - O Sersic, exponential, King model fits
 
 foolsGold:
@@ -38,7 +39,8 @@ foolsGold:
 - O Create catalog of fake dwarfs to inject
 
 other:
-- O Read and overplot isochrones
+- X Read and overplot isochrones
+    - O Currently only has a single set of 10 Gyr Padova isochrones. Add other ages (and isochrone sets)?
 - O CMD plotting function? Other plotting functions?
 - X Image cutouts
 - O Surface/aperture photometry?
