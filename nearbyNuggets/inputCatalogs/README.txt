@@ -1,1 +1,1 @@
-
+* Add "unset flag(s)" capability to photomCat so the various flags can be reset to False when, e.g., you want to change the selection criteria.
