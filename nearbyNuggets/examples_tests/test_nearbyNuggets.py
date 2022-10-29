@@ -118,12 +118,15 @@ cen = (sep_cen.arcmin < 15.0)
 plotcand6(sc_bins[dwarfcands][2], rcat, 0, nsig_bins[dwarfcands][2],
           cen, rcat.rgbFlag,
           rcat.isstarFlag, binsize=1.5, recalc_cen=True, savefig=False,
-          name_append='', overlay_pts=False)
+          name_append='', overlay_pts=True)
 
 #%%
 import nearbyNuggets.analysis.structParams as structParams
 # from nearbyNuggets.toolbox.utils import median_pos
 import nearbyNuggets.toolbox.utils as nn_utils
+
+# Reset the radius flag to clear any previous subsets:
+rcat.resetFlag(flagList=['radiusFlag'])
 
 rcat.setRadiusFlag(sc_bins[dwarfcands][2], 2.0)
 
@@ -147,9 +150,9 @@ sc_cen_mcmc = SkyCoord(ra=struct_params_mcmc['ra']*u.deg, dec=struct_params_mcmc
 dmod = nn_utils.distToDmod(3.2e6)
 
 # lumin.totLum(sc_cen_mcmc, rcat, 2*struct_params_mcmc['rhalf'], gmagbins, gerr_medians,
-lumin.totLum(sc_cen_mcmc, rcat, 3.0, gmagbins, gerr_medians,
-             imagbins, ierr_medians, rcat.rgbFlag, rcat.isstarFlag, dmod,
-             struct_params_mcmc['nstars'], struct_params_mcmc['nstars_err'])
+luminosity = lumin.totLum(sc_cen_mcmc, rcat, 3.0, gmagbins, gerr_medians,
+                          imagbins, ierr_medians, rcat.rgbFlag, rcat.isstarFlag, dmod,
+                          struct_params_mcmc['nstars'], struct_params_mcmc['nstars_err'])
 
 
 

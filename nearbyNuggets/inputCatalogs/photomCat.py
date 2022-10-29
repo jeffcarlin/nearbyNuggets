@@ -128,19 +128,17 @@ class photomCat:
         else:
             print('Input magnitude/color columns do not exist in the catalog.')
 
-
-'''
-    def medianMagErrors(self, magbinsize=0.2, minmag=17.0, maxmag=29.0,
-                        magColumn='i0_bgfix', errColumn='ierr'):
-        # Calculate the median mag errors as a function of magnitude:
-        magbins = np.arange(17, 29, magbinsize)
-        mederr = []
-        magbin_centers = []
-        for i in range(np.size(magbins)):
-            inbin = (self.dat[magColumn] < magbins[i]+magbinsize) & (self.dat[magColumn] > magbins[i])
-            mederr.append(np.nanmedian(self.dat[inbin][errColumn]))
-            magbin_centers.append(magbins[i]+magbinsize/2)
-
-        self.magErrBins = magbin_centers
-        self.magErrMedians = mederr
-'''
+    def resetFlag(self, flagList=[]):
+        allFlagsList = ['rgbFlag', 'radiusFlag', 'isstarFlag']
+        if len(flagList) > 0:
+            for flag in flagList:
+                if flag == 'rgbFlag':
+                    self.rgbFlag = np.full(len(self.dat), False, dtype=bool)
+                elif flag == 'radiusFlag':
+                    self.radiusFlag = np.full(len(self.dat), False, dtype=bool)
+                elif flag == 'isstarFlag':
+                    self.isstarFlag = np.full(len(self.dat), False, dtype=bool)
+                else:
+                    print(flag, ' not in list of options.')
+        else:
+            print('Provide a list of flags to reset as flagList. Options: ', allFlagsList)
