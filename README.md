@@ -24,6 +24,8 @@ mining:
 
 analysis:
 - X Candidate diagnostic plots
+  - suggestions for diagnostic plots: overlay point sources on color image, add a zoomed-in color image, eliminate g/i bands?, add coordinates to color image, add luminosity function (with expected theoretical LF?)
+
 - X Estimate structural parameters for candidates
   - X Max likelihood
   - X MCMC
