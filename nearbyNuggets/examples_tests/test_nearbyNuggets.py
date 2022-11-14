@@ -111,11 +111,11 @@ peaks2 = getPeaks(counts_bins, binCounts, bg_bins, std_bins,
 #peaks2['std'] = std_bins_img[peaks2['y_peak'], peaks2['x_peak']]
 
 #%%
-from nearbyNuggets.analysis.diagnosticPlots import plotcand6
+from nearbyNuggets.analysis.diagnosticPlots import plotcand6b
 sep_cen = sc_dat.separation(n2403cen)
 cen = (sep_cen.arcmin < 15.0)
 
-plotcand6(sc_bins[dwarfcands][2], rcat, 0, nsig_bins[dwarfcands][2],
+plotcand6b(sc_bins[dwarfcands][2], rcat, 0, nsig_bins[dwarfcands][2],
           cen, rcat.rgbFlag,
           rcat.isstarFlag, binsize=1.5, recalc_cen=True, savefig=False,
           name_append='', overlay_pts=True)
