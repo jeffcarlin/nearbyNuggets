@@ -689,11 +689,11 @@ def plotcand6b(sc_inp, cat, i, nsig,
     plt.subplot(325)
 
     lf_binsize = 0.25
-    lf_minmag = 18.25
+    lf_minmag = 21.25
     lf_maxmag = 26.5
     lf_bins = np.arange(lf_minmag, lf_maxmag, lf_binsize)
     imag_cand_rgb = imag[cand_flag_cmd & star_flag & cmdsel_flag]
-    imag_cand_all = imag[cand_flag_cmd & star_flag]
+    imag_cand_all = imag[cand_flag & ~cand_flag_cmd & star_flag]
 
     lf_mag_all, lf_hist_bins = np.histogram(imag_cand_all, bins=lf_bins)
     lf_bin_cens = lf_hist_bins + lf_binsize/2.0
@@ -703,10 +703,28 @@ def plotcand6b(sc_inp, cat, i, nsig,
     plt.plot(lf_bin_cens[:-1], np.cumsum(lf_mag_all), 'ko')
     plt.plot(lf_bin_cens[:-1], np.cumsum(lf_mag_rgb), '-.', color='Red')
     plt.plot(lf_bin_cens[:-1], np.cumsum(lf_mag_rgb), 'ko')
+    #plt.plot(lf_bin_cens[:-1], np.cumsum(lf_mag_rgb)/np.cumsum(lf_mag_all), '-.', color='DodgerBlue')
     plt.minorticks_on()
     plt.semilogy()
 
+    def lf_powerlaw(mags, lf_inp, alpha=2.35):
+        # dN = Phi*m^(-alpha), where "m" is the magnitude
+        # Want dN = value at mag25bin, so Phi = dN*m^(alpha) = dN*25^(alpha)
+        mag25bin = np.argmin(np.abs(mags - 25.0))
+        phi_salpeter = np.sum(lf_inp[:mag25bin])  # *(25.0**(-1*alpha))
+        return phi_salpeter*(10.0**((6.0*alpha/5.0) * (mags-25.0)))
+
+    # print(phi_salpeter)
+    # lf_salpeter = phi_salpeter * (lf_bin_cens**(-2.35))
+
+    lf_salpeter = lf_powerlaw(lf_bin_cens, lf_mag_rgb, alpha=2.35)
+    plt.plot(lf_bin_cens[:-1], lf_salpeter[:-1], ':', color='Gray')
+
+    lf_geha = lf_powerlaw(lf_bin_cens, lf_mag_rgb, alpha=1.30)
+    plt.plot(lf_bin_cens[:-1], lf_geha[:-1], '--', color='Gray')
+
     # plt.title('luminosity function')
+    plt.ylim(8*10**(-1), 1.15*np.sum(lf_mag_all))
 
     plt.xlabel('imag')
     plt.ylabel(r'$N_{*, cand} <$ imag')
