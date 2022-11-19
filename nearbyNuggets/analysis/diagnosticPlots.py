@@ -7,7 +7,8 @@ from astropy.nddata import Cutout2D
 from astropy.visualization import ZScaleInterval
 import img_scale
 from astropy.wcs import WCS
-from astropy.convolution import convolve, Gaussian2DKernel
+# from astropy.convolution import convolve, Gaussian2DKernel
+from nearbyNuggets.toolbox.utils import lf_powerlaw
 
 
 def plotcand6(sc_inp, cat, i, nsig,
@@ -121,6 +122,9 @@ def plotcand6(sc_inp, cat, i, nsig,
 
     cand_flag = sc_all.separation(sc_bin) < (1.5*binsize)
     cand_flag_cmd = sc_all.separation(sc_bin) < (1.0*binsize)
+    # "background annulus of same area as cand_flag_cmd"
+    cand_flag_bg_cmd = (sc_all.separation(sc_bin) < (2.0*binsize)) &\
+                       (sc_all.separation(sc_bin) > np.sqrt(3)*binsize)
 
     # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     # Color-magnitude diagram:
@@ -526,6 +530,8 @@ def plotcand6b(sc_inp, cat, i, nsig,
 
     cand_flag = sc_all.separation(sc_bin) < (1.5*binsize)
     cand_flag_cmd = sc_all.separation(sc_bin) < (1.0*binsize)
+    cand_flag_bg_cmd = (sc_all.separation(sc_bin) < (2.0*binsize)) &\
+                       (sc_all.separation(sc_bin) > np.sqrt(3)*binsize)
 
     # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     # Color-magnitude diagram:
@@ -693,38 +699,43 @@ def plotcand6b(sc_inp, cat, i, nsig,
     lf_maxmag = 26.5
     lf_bins = np.arange(lf_minmag, lf_maxmag, lf_binsize)
     imag_cand_rgb = imag[cand_flag_cmd & star_flag & cmdsel_flag]
+    imag_cand_bg_rgb = imag[cand_flag_bg_cmd & star_flag & cmdsel_flag]
     imag_cand_all = imag[cand_flag & ~cand_flag_cmd & star_flag]
 
     lf_mag_all, lf_hist_bins = np.histogram(imag_cand_all, bins=lf_bins)
     lf_bin_cens = lf_hist_bins + lf_binsize/2.0
     lf_mag_rgb, lf_hist_bins = np.histogram(imag_cand_rgb, bins=lf_bins)
+    lf_mag_bg_rgb, lf_hist_bins = np.histogram(imag_cand_bg_rgb, bins=lf_bins)
 
-    plt.plot(lf_bin_cens[:-1], np.cumsum(lf_mag_all), '-.', color='DodgerBlue')
-    plt.plot(lf_bin_cens[:-1], np.cumsum(lf_mag_all), 'ko')
-    plt.plot(lf_bin_cens[:-1], np.cumsum(lf_mag_rgb), '-.', color='Red')
+    #plt.plot(lf_bin_cens[:-1], np.cumsum(lf_mag_all), '-.', color='DodgerBlue', label='all stars')
+    #plt.plot(lf_bin_cens[:-1], np.cumsum(lf_mag_all), 'ko')
+    plt.plot(lf_bin_cens[:-1], np.cumsum(lf_mag_rgb), '-.', color='Red', label='cmd selected')
     plt.plot(lf_bin_cens[:-1], np.cumsum(lf_mag_rgb), 'ko')
+    plt.plot(lf_bin_cens[:-1], np.cumsum(lf_mag_bg_rgb), '-.', color='Gray', label='background w/ cmd selection')
+    plt.plot(lf_bin_cens[:-1], np.cumsum(lf_mag_bg_rgb), 'ko')
     #plt.plot(lf_bin_cens[:-1], np.cumsum(lf_mag_rgb)/np.cumsum(lf_mag_all), '-.', color='DodgerBlue')
+    plt.legend()
     plt.minorticks_on()
     plt.semilogy()
 
-    def lf_powerlaw(mags, lf_inp, alpha=2.35):
-        # dN = Phi*m^(-alpha), where "m" is the magnitude
-        # Want dN = value at mag25bin, so Phi = dN*m^(alpha) = dN*25^(alpha)
-        mag25bin = np.argmin(np.abs(mags - 25.0))
-        phi_salpeter = np.sum(lf_inp[:mag25bin])  # *(25.0**(-1*alpha))
-        return phi_salpeter*(10.0**((6.0*alpha/5.0) * (mags-25.0)))
+    #def lf_powerlaw(mags, lf_inp, alpha=2.35):
+    #    # dN = Phi*m^(-alpha), where "m" is the magnitude
+    #    # Want dN = value at mag25bin, so Phi = dN*m^(alpha) = dN*25^(alpha)
+    #    mag25bin = np.argmin(np.abs(mags - 25.0))
+    #    phi_salpeter = np.sum(lf_inp[:mag25bin])  # *(25.0**(-1*alpha))
+    #    return phi_salpeter*(10.0**((6.0*alpha/5.0) * (mags-25.0)))
 
     # print(phi_salpeter)
     # lf_salpeter = phi_salpeter * (lf_bin_cens**(-2.35))
 
     lf_salpeter = lf_powerlaw(lf_bin_cens, lf_mag_rgb, alpha=2.35)
-    plt.plot(lf_bin_cens[:-1], lf_salpeter[:-1], ':', color='Gray')
+    #plt.plot(lf_bin_cens[:-1], lf_salpeter[:-1], ':', color='Gray')
 
     lf_geha = lf_powerlaw(lf_bin_cens, lf_mag_rgb, alpha=1.30)
-    plt.plot(lf_bin_cens[:-1], lf_geha[:-1], '--', color='Gray')
+    #plt.plot(lf_bin_cens[:-1], lf_geha[:-1], '--', color='Gray')
 
     # plt.title('luminosity function')
-    plt.ylim(8*10**(-1), 1.15*np.sum(lf_mag_all))
+    plt.ylim(8*10**(-1), 1.15*np.sum(lf_mag_rgb))
 
     plt.xlabel('imag')
     plt.ylabel(r'$N_{*, cand} <$ imag')
@@ -733,52 +744,52 @@ def plotcand6b(sc_inp, cat, i, nsig,
     # Color image:
     plt.subplot(326)
 
-    xy_pix_size = np.int(np.floor(2.0*binsize.to(u.arcsec).value/pixscale))
-    size = (xy_pix_size, xy_pix_size)     # pixels
+    #xy_pix_size = np.int(np.floor(2.0*binsize.to(u.arcsec).value/pixscale))
+    #size = (xy_pix_size, xy_pix_size)     # pixels
 
-    cutout_g = Cutout2D(img_g, position, size)
-    cutout_r_tmp = Cutout2D(img_r, position, size)
-    cutout_i = Cutout2D(img_i, position, size)
+    #cutout_g = Cutout2D(img_g, position, size)
+    #cutout_r_tmp = Cutout2D(img_r, position, size)
+    #cutout_i = Cutout2D(img_i, position, size)
 
-    cutout_r = (cutout_r_tmp.data+cutout_g.data)/2
+    #cutout_r = (cutout_r_tmp.data+cutout_g.data)/2
 
-    zscale = ZScaleInterval()
-    vmin_g, vmax_g = zscale.get_limits(cutout_g.data)
-    vmin_r, vmax_r = zscale.get_limits(cutout_r.data)
-    vmin_i, vmax_i = zscale.get_limits(cutout_i.data)
+    #zscale = ZScaleInterval()
+    #vmin_g, vmax_g = zscale.get_limits(cutout_g.data)
+    #vmin_r, vmax_r = zscale.get_limits(cutout_r.data)
+    #vmin_i, vmax_i = zscale.get_limits(cutout_i.data)
 
-    img = np.zeros((cutout_i.shape[0], cutout_i.shape[1], 3), dtype=float)
-    img[:, :, 0] = img_scale.linear(cutout_i.data, scale_min=0.1*vmin_i, scale_max=0.6*vmax_i)
-    img[:, :, 1] = img_scale.linear(cutout_r.data, scale_min=0.1*vmin_r, scale_max=0.9*vmax_r)
-    img[:, :, 2] = img_scale.linear(cutout_g.data, scale_min=0.1*vmin_g, scale_max=0.75*vmax_g)
+    #img = np.zeros((cutout_i.shape[0], cutout_i.shape[1], 3), dtype=float)
+    #img[:, :, 0] = img_scale.linear(cutout_i.data, scale_min=0.1*vmin_i, scale_max=0.6*vmax_i)
+    #img[:, :, 1] = img_scale.linear(cutout_r.data, scale_min=0.1*vmin_r, scale_max=0.9*vmax_r)
+    #img[:, :, 2] = img_scale.linear(cutout_g.data, scale_min=0.1*vmin_g, scale_max=0.75*vmax_g)
 
-    # Create RA, Dec ticks, labels:
-    nticks = 4
-    xtick_locs = np.arange(0, xy_pix_size, xy_pix_size/nticks) + xy_pix_size/(2*nticks)
-    ytick_locs = np.arange(0, xy_pix_size, xy_pix_size/nticks) + xy_pix_size/(2*nticks)
+    ## Create RA, Dec ticks, labels:
+    #nticks = 4
+    #xtick_locs = np.arange(0, xy_pix_size, xy_pix_size/nticks) + xy_pix_size/(2*nticks)
+    #ytick_locs = np.arange(0, xy_pix_size, xy_pix_size/nticks) + xy_pix_size/(2*nticks)
 
-    tick_locs_tmp = []
-    for loc in xtick_locs:
-        tick_locs_tmp.append(cutout_g.to_original_position((loc, 0)))
+    #tick_locs_tmp = []
+    #for loc in xtick_locs:
+    #    tick_locs_tmp.append(cutout_g.to_original_position((loc, 0)))
 
-    xtick_locs_orig = []
-    for loc in tick_locs_tmp:
-        xtick_locs_orig.append(loc[0])
+    #xtick_locs_orig = []
+    #for loc in tick_locs_tmp:
+    #    xtick_locs_orig.append(loc[0])
 
-    tick_locs_tmp = []
-    for loc in ytick_locs:
-        tick_locs_tmp.append(cutout_g.to_original_position((0, loc)))
+    #tick_locs_tmp = []
+    #for loc in ytick_locs:
+    #    tick_locs_tmp.append(cutout_g.to_original_position((0, loc)))
 
-    ytick_locs_orig = []
-    for loc in tick_locs_tmp:
-        ytick_locs_orig.append(loc[1])
+    #ytick_locs_orig = []
+    #for loc in tick_locs_tmp:
+    #    ytick_locs_orig.append(loc[1])
 
-    xtick_lbls = []
-    ytick_lbls = []
-    for xt, yt in zip(xtick_locs_orig, ytick_locs_orig):
-        temp = w.all_pix2world([[xt, yt]], 0)
-        xtick_lbls.append(str(np.round(temp[0][0], 2)))
-        ytick_lbls.append(str(np.round(temp[0][1], 2)))
+    #xtick_lbls = []
+    #ytick_lbls = []
+    #for xt, yt in zip(xtick_locs_orig, ytick_locs_orig):
+    #    temp = w.all_pix2world([[xt, yt]], 0)
+    #    xtick_lbls.append(str(np.round(temp[0][0], 2)))
+    #    ytick_lbls.append(str(np.round(temp[0][1], 2)))
 
     fig = plt.gca()
     fig.axes.xaxis.set_ticks(xtick_locs, labels=xtick_lbls)
@@ -787,10 +798,10 @@ def plotcand6b(sc_inp, cat, i, nsig,
     fig.axes.get_xaxis().set_visible(True)
     fig.axes.get_yaxis().set_visible(True)
 
-    linelength_arcsec = 10.0
-    linelength_pix = linelength_arcsec/pixscale
-    fig.hlines(60, 70, 70+linelength_pix, color='White')
-    fig.text(30, 85, '10 arcsec', color='White')
+    #linelength_arcsec = 10.0
+    #linelength_pix = linelength_arcsec/pixscale
+    #fig.hlines(60, 70, 70+linelength_pix, color='White')
+    #fig.text(30, 85, '10 arcsec', color='White')
 
     x_rgb, y_rgb = w.all_world2pix(ra[cand_flag & star_flag & cmdsel_flag],
                                    dec[cand_flag & star_flag & cmdsel_flag], 0)

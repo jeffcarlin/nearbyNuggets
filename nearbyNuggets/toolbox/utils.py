@@ -134,6 +134,31 @@ def getIsochrone(mh=-2.0, msrgb=True):
     return iso_all[iso]
 
 
+def lf_powerlaw(mags, lf_inp, alpha=2.35):
+    """
+    Calculate a power-law luminosity function.
+
+    Parameters
+    ----------
+    mags : magnitudes at which to return the luminosity function
+    lf_inp : binned luminosity function from the data
+    alpha : power-law slope (Salpeter: 2.35)
+
+    Returns
+    -------
+    lf_out : powerlaw luminosity function normalized to the number
+             counts at 25th magnitude
+
+    # dN = Phi*m^(-alpha), where "m" is the magnitude
+    # Want dN = value at mag25bin, so Phi = dN*m^(alpha) = dN*25^(alpha)
+    """
+
+    mag25bin = np.argmin(np.abs(mags - 25.0))
+    phi_salpeter = np.sum(lf_inp[:mag25bin])  # *(25.0**(-1*alpha))
+    lf_out = phi_salpeter*(10.0**((6.0*alpha/5.0) * (mags-25.0)))
+    return lf_out
+
+
 def median_interval(data, alpha=0.32):
     """
     Median including Bayesian credible interval.
