@@ -816,8 +816,9 @@ def plotcand6b(sc_inp, cat, i, nsig,
         savefile = 'cand_diagnostic_plots_6panel_'+name_append+'.png'
         plt.savefig(savefile, dpi=180)
         print('Saved figure to ', savefile, '. Rename to avoid overwriting.')
+    else:
+        plt.show()
 
-    plt.show()
     plt.close()
 
 
