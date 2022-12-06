@@ -114,6 +114,8 @@ def totLum(sc_inp, cat, rh, gmagbins, gerr_medians, imagbins, ierr_medians,
 
 # Factor to apply to RGB counts to correct for incompleteness:
     completeness_factor = np.sum(g_lf_completeness_corr)/np.sum(g_lf_obs[:-1])
+    if completeness_factor > 1.0:
+        completeness_factor = 1.0
 
 # Read in the fake dwarf data:
     # hhh = fits.open('/Users/jcarlin/Dropbox/local_volume_dwarfs/dwarfsample_code/dwarfsample/n2403/n2403_dwarf_forLuminosity_age10gyr_feh_m2p0.fits')
@@ -181,22 +183,34 @@ def totLum(sc_inp, cat, rh, gmagbins, gerr_medians, imagbins, ierr_medians,
         # Apply a scatter in the number of stars of +/-nstars_err:
         #    The factor of 2 accounts for the stars being within the half-light radius
     #    samp_ind = rng.choice(fake_g_rgb.shape[0], np.int(2*nstars_fit*completeness_factor+(nstars_err*rng.normal(0, 1))))
-        samp_ind = rng.choice(fake_g_rgb.shape[0], np.int(nstars*completeness_factor+(nstars_err*rng.normal(0, 1))))
+
+        # print(fake_g_rgb.shape[0], np.int(nstars*completeness_factor+(nstars_err*rng.normal(0, 1))))
+
+        samplength = 0
+
+        # This ensures that the sample size is positive:
+        while samplength < 1:
+            samplength = np.int(nstars*completeness_factor+(nstars_err*rng.normal(0, 1)))
+
+        samp_ind = rng.choice(fake_g_rgb.shape[0], samplength)
+
+        # samp_ind = rng.choice(fake_g_rgb.shape[0], np.int(nstars*completeness_factor+(nstars_err*rng.normal(0, 1))))
         # samp_ind = rng.choice(fake_g_rgb.shape[0], np.int(nstars_fit+(nstars_err*rng.normal(0, 1))))
-        nsamp.append(len(samp_ind))
+        if len(samp_ind) > 0:
+            nsamp.append(len(samp_ind))
 
-        magref_g = fake_g_rgb[samp_ind[0]]
-        magref_samp_g.append(magref_g)
-        totlum_g = np.sum(10.0**((magref_g - fake_g_rgb[samp_ind[1:]])/2.5))
-        lum_samp_g.append(totlum_g)
+            magref_g = fake_g_rgb[samp_ind[0]]
+            magref_samp_g.append(magref_g)
+            totlum_g = np.sum(10.0**((magref_g - fake_g_rgb[samp_ind[1:]])/2.5))
+            lum_samp_g.append(totlum_g)
 
-        magref_i = fake_i_rgb[samp_ind[0]]
-        magref_samp_i.append(magref_i)
-        totlum_i = np.sum(10.0**((magref_i - fake_i_rgb[samp_ind[1:]])/2.5))
-        lum_samp_i.append(totlum_i)
+            magref_i = fake_i_rgb[samp_ind[0]]
+            magref_samp_i.append(magref_i)
+            totlum_i = np.sum(10.0**((magref_i - fake_i_rgb[samp_ind[1:]])/2.5))
+            lum_samp_i.append(totlum_i)
 
-    # l = 10^((m-m0)/-2.5)
-    # magtot = m0-2.5*np.log10(l)
+        # l = 10^((m-m0)/-2.5)
+        # magtot = m0-2.5*np.log10(l)
 
     mtot_g = magref_samp_g-2.5*np.log10(lum_samp_g)-dmod
     mtot_i = magref_samp_i-2.5*np.log10(lum_samp_i)-dmod
