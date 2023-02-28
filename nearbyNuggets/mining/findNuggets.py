@@ -217,8 +217,8 @@ def getPeaks(bincounts, bincounts_map, bgbins, stdbins, bgareafrac_bins,
     peaks_tbl = find_peaks(binned_counts_img, bg_bins_img+sigma_thresh*std_bins_img,
                            centroid_func=centroid_com, box_size=box_size)
 
-    peaks_tbl['ra'] = ra_bin_centers[peaks_tbl['x_peak']]
-    peaks_tbl['dec'] = dec_bin_centers[peaks_tbl['y_peak']]
+    peaks_tbl['ra_peak'] = ra_bin_centers[peaks_tbl['x_peak']]
+    peaks_tbl['dec_peak'] = dec_bin_centers[peaks_tbl['y_peak']]
     peaks_tbl['sig'] = (peaks_tbl['peak_value']-bg_bins_img[peaks_tbl['y_peak'], peaks_tbl['x_peak']])/std_bins_img[peaks_tbl['y_peak'], peaks_tbl['x_peak']]
     peaks_tbl['n_in_bin'] = binned_counts_img[peaks_tbl['y_peak'], peaks_tbl['x_peak']]
     peaks_tbl['bg'] = bg_bins_img[peaks_tbl['y_peak'], peaks_tbl['x_peak']]

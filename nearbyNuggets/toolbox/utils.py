@@ -239,7 +239,7 @@ def rh_arcmin_to_pc(rh_arcmin, dist):
         Distance to object in kpc
     """
     rh_pc = (dist*1e3)*((rh_arcmin*u.arcmin).to(u.rad))
-    return rh_pc
+    return rh_pc.value
 
 
 def whichPatch(position, patchlist):
