@@ -7,7 +7,7 @@ def findNsigma(mags, errors, nsig=10.0, magbinsize=0.02, minmag=15.0, maxmag=29.
     errbins = np.arange(minmag, maxmag, magbinsize)
     errbin_medians = stats.binned_statistic(mags, errors, statistic='median', bins=errbins)
     minloc_err = np.nanargmin(np.abs(errbin_medians[0]-(1/nsig)))
-    return errbin_medians[1][minloc_err]
+    return errbin_medians[1][minloc_err]+magbinsize/2
 
 
 def getMedianMagErrors(cat, magbinsize=0.2, minmag=17.0, maxmag=29.0,
