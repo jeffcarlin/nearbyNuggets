@@ -629,7 +629,7 @@ def plotcand6b(sc_inp, cat, i, nsig,
     img_r = img_i
 
     position = (imx, imy)
-    xy_pix_size = np.int(np.floor(1.0*binsize.to(u.arcsec).value/pixscale))
+    xy_pix_size = np.int(np.floor(2.0*binsize.to(u.arcsec).value/pixscale))
     size = (xy_pix_size, xy_pix_size)     # pixels
 
     cutout_g = Cutout2D(img_g, position, size)
