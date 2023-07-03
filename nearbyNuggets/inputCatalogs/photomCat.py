@@ -99,7 +99,7 @@ class photomCat:
 
     def rgbBoxFilter(self, corners=[], colorColumn='gi0_bgfix', magColumn='i0_bgfix'):
         # NOTE: assumes corners = ['upper left', 'lower left', 'lower right', 'upper right']
-        if len(corners) != 3:
+        if len(corners) != 4:
             # If the corners haven't been input, or if the list is too
             # small, revert to a default RGB box.
             corners = [[1.1, 23.7], [0.6, 26.2], [1.5, 26.2], [2.4, 23.7]]
