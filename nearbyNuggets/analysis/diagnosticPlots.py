@@ -5,7 +5,7 @@ from astropy.io import fits
 from astropy.coordinates import SkyCoord
 from astropy.nddata import Cutout2D
 from astropy.visualization import ZScaleInterval
-import img_scale
+from nearbyNuggets.toolbox import img_scale
 from astropy.wcs import WCS
 # from astropy.convolution import convolve, Gaussian2DKernel
 from nearbyNuggets.toolbox.utils import lf_powerlaw
