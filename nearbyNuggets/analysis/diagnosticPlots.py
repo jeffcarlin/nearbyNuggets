@@ -95,7 +95,8 @@ def plotcand6(sc_inp, cat, i, nsig,
         #   'ytick.labelsize': 20,
         'text.usetex': True,
         'text.latex.preamble': r'\boldmath',
-        'figure.figsize': [14, 18]
+        'figure.figsize': [14, 18],
+        'figure.facecolor': 'White'
     }
 
     plt.rcParams.update(params)
