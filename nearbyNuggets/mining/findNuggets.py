@@ -130,7 +130,8 @@ def binsToSkyCoord(ra_bins, dec_bins):
 
 
 def densityBinStats(binned_counts, ra_bins, dec_bins, binned_counts_all=None,
-                    binsize=None, inner_annulus=2.0, outer_annulus=5.0):
+                    binsize=None, inner_annulus=2.0, outer_annulus=5.0,
+                    bgmax=30):
     # binned_counts: density of filtered sources in 2D bins as returned by densityMap
     # ra_bins, dec_bins: bin coordinates as returned by makeBins
     # binned_counts_all: density of _all_ sources in 2D bins as returned by densityMap
@@ -178,7 +179,7 @@ def densityBinStats(binned_counts, ra_bins, dec_bins, binned_counts_all=None,
         # print(len(keep_bins_all), len(bincounts_all), len(bincounts))
         # Keep only bins within the footprint (bincounts_all>0) and those that don't overlap the main body of
         #   N2403 (bincounts<30; arbitrarily chosen to remove high starcount regions)
-        keep_bins_okbg = keep_bins_all & (bincounts_all > 0) & (bincounts < 30)
+        keep_bins_okbg = keep_bins_all & (bincounts_all > 0) & (bincounts < bgmax)
         stats_tmp = sigma_clipped_stats(bincounts[keep_bins_okbg], sigma=3, maxiters=10)
         bgareafrac_bins[i_bin] = np.size(bincounts[keep_bins_okbg])/np.size(bincounts[keep_bins_all])
         bg_bins[i_bin] = stats_tmp[0]  # mean background

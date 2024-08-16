@@ -41,8 +41,8 @@ class photomCat:
         # ...: arfs/ngc2403//catalogs_dec2020/fake_dwarfs/cat_jan2021_fakedwarfs_NGC240
         # ...: 3.fits.gz')
 
-    def setExtinctionCorr(self, units=u.radian):
-        coords = SkyCoord(self.dat['ra']*units, self.dat['dec']*units, frame='icrs')
+    def setExtinctionCorr(self, units=u.radian, racol='ra', deccol='dec'):
+        coords = SkyCoord(self.dat[racol]*units, self.dat[deccol]*units, frame='icrs')
 
         sfd = SFDQuery()
         ebv = sfd(coords)
