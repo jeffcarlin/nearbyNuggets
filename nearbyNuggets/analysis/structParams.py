@@ -166,7 +166,8 @@ def calc_sb(M_V, e, dmod, rh):
 def mlStructParams(sc_inp, cat, rad,
                    cmdsel_flag, star_flag,
                    ellip0=0.5, theta0=90.0,
-                   rh0=1.0, sigmab0=0.1):
+                   rh0=1.0, sigmab0=0.1,
+                   racol='ra', deccol='dec', radec_units=u.radian):
     """ Calculate the structural parameters of a candidate dwarf using
         a maximum likelihood method
 
@@ -194,7 +195,7 @@ def mlStructParams(sc_inp, cat, rad,
         default: 0.1
     """
 
-    sc_all = SkyCoord(ra=cat.dat['ra']*u.radian, dec=cat.dat['dec']*u.radian, frame='icrs')
+    sc_all = SkyCoord(ra=cat.dat[racol]*radec_units, dec=cat.dat[deccol]*radec_units, frame='icrs')
     ra = sc_all.ra.value
     dec = sc_all.dec.value
     spatial_msk_tmp = sc_all.separation(sc_inp) < (rad*u.arcmin)
@@ -234,7 +235,8 @@ def mcmcStructParams(sc_inp, cat, rad,
                      cmdsel_flag, star_flag,
                      ellip0=0.5, theta0=90.0,
                      rh0=1.0, sigmab0=0.1, nwalkers=100, nthreads=16,
-                     nsamples=10000, nburn=1000):
+                     nsamples=10000, nburn=1000,
+                     racol='ra', deccol='dec', radec_units=u.radian):
     """ Calculate the structural parameters of a candidate dwarf using
         a maximum likelihood method + MCMC
     Parameters
@@ -269,7 +271,7 @@ def mcmcStructParams(sc_inp, cat, rad,
         number of mcmc burn-in iterations (default: 1000)
     """
 
-    sc_all = SkyCoord(ra=cat.dat['ra']*u.radian, dec=cat.dat['dec']*u.radian, frame='icrs')
+    sc_all = SkyCoord(ra=cat.dat[racol]*radec_units, dec=cat.dat[deccol]*radec_units, frame='icrs')
     ra = sc_all.ra.value
     dec = sc_all.dec.value
     spatial_msk_tmp = sc_all.separation(sc_inp) < (rad*u.arcmin)

@@ -9,7 +9,8 @@ from scipy.interpolate import interp1d
 
 
 def totLum(sc_inp, cat, rh, gmagbins, gerr_medians, imagbins, ierr_medians,
-           cmdsel_flag, star_flag, dmod, nstars, nstars_err):
+           cmdsel_flag, star_flag, dmod, nstars, nstars_err,
+           racol='ra', deccol='dec', radec_units=u.radian):
     # Estimate the total luminosity:
     """ Calculate the structural parameters of a candidate dwarf using
         a maximum likelihood method + MCMC
@@ -46,7 +47,7 @@ def totLum(sc_inp, cat, rh, gmagbins, gerr_medians, imagbins, ierr_medians,
     completeness coeffs
     """
 
-    sc_all = SkyCoord(ra=cat.dat['ra']*u.radian, dec=cat.dat['dec']*u.radian, frame='icrs')
+    sc_all = SkyCoord(ra=cat.dat[racol]*radec_units, dec=cat.dat[deccol]*radec_units, frame='icrs')
     ra = sc_all.ra.value
     dec = sc_all.dec.value
     # Select stars within measured r_h:

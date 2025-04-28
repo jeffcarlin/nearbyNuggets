@@ -51,8 +51,8 @@ class photomCat:
         self.dat['a_g'] = 3.172*ebv
         self.dat['a_i'] = 1.682*ebv
 
-    def setRadiusFlag(self, sc_cen, rad_arcmin, radec_units=u.radian):
-        coords = SkyCoord(self.dat['ra']*radec_units, self.dat['dec']*radec_units, frame='icrs')
+    def setRadiusFlag(self, sc_cen, rad_arcmin, racol='ra', deccol='dec', radec_units=u.radian):
+        coords = SkyCoord(self.dat[racol]*radec_units, self.dat[deccol]*radec_units, frame='icrs')
         spatial_msk_tmp = coords.separation(sc_cen) < (rad_arcmin*u.arcmin)
         self.radiusFlag = spatial_msk_tmp
 

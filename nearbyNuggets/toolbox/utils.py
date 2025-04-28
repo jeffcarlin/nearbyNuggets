@@ -97,7 +97,8 @@ def dmodToDist(dmod):
     return 10.0**((dmod+5)/5.0)
 
 
-def getIsochrone(mh=-2.0, msrgb=True):
+def getIsochrone(mh=-2.0, msrgb=True,
+                 isofile='/Users/jcarlin/Dropbox/isochrones/padova/panstarrs/output494507502139.dat'):
     """
     Get a 10 Gyr Padova isochrone of a given metallicity. Currently uses a
     hard-coded file of PanSTARRS isochrones for only one age, but could be
@@ -122,7 +123,6 @@ def getIsochrone(mh=-2.0, msrgb=True):
     if mh not in mhvals:
         print('Supplied [M/H] value not in list. Use one of these: ', mhvals)
         return
-    isofile = '/Users/jcarlin/Dropbox/isochrones/padova/panstarrs/output494507502139.dat'
     iso_all = ascii.read(isofile, header_start=13, data_start=14)
 
     if msrgb:
