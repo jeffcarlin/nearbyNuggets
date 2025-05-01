@@ -1542,6 +1542,8 @@ def plotcand6_butler(butler, sc_inp, cat, nsig,
 
     fig.imshow(img, aspect='equal', origin='lower', extent=[0, xy_pix_size, 0, xy_pix_size])
 
+    plt.tight_layout()
+
     if savefig:
         savefile = 'cand_diagnostic_plots_6panel_'+name_append+'.png'
         plt.savefig(savefile, dpi=180)
