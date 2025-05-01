@@ -1425,9 +1425,9 @@ def plotcand6_butler(butler, sc_inp, cat, nsig,
     pixscale = 0.168 # arcsec per pixel; hard-coded for HSC
     xy_pix_size = int(np.floor(2.0*binsize.to(u.arcsec).value/pixscale))
 
-    cutout_g, bbox_g = cutout_coadd(butler, censtar.ra.value, censtar.dec.value, band='g',
+    cutout_g, bbox_g = cutout_coadd(butler, sc_all[censtar].ra.value, sc_all[censtar].dec.value, band='g',
                                     datasetType='deepCoadd_calexp', cutoutSideLength=xy_pix_size)
-    cutout_i, bbox_i = cutout_coadd(butler, censtar.ra.value, censtar.dec.value, band='i',
+    cutout_i, bbox_i = cutout_coadd(butler, sc_all[censtar].ra.value, sc_all[censtar].dec.value, band='i',
                                     datasetType='deepCoadd_calexp', cutoutSideLength=xy_pix_size)
     cutout_r = cutout_g.clone()
     cutout_r.image.array = (cutout_g.image.array + cutout_i.image.array)/2.0
