@@ -17,8 +17,8 @@ def getMedianMagErrors(cat, magbinsize=0.2, minmag=17.0, maxmag=29.0,
     mederr = []
     magbin_centers = []
     for i in range(np.size(magbins)):
-        inbin = (cat.dat[magColumn] < magbins[i]+magbinsize) & (cat.dat[magColumn] > magbins[i])
-        mederr.append(np.nanmedian(cat.dat[inbin][errColumn]))
+        inbin = (cat[magColumn] < magbins[i]+magbinsize) & (cat[magColumn] > magbins[i])
+        mederr.append(np.nanmedian(cat[inbin][errColumn]))
         magbin_centers.append(magbins[i]+magbinsize/2)
 
     magErrBins = magbin_centers
