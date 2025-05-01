@@ -195,7 +195,7 @@ def mlStructParams(sc_inp, cat, rad,
         default: 0.1
     """
 
-    sc_all = SkyCoord(ra=cat.dat[racol]*radec_units, dec=cat.dat[deccol]*radec_units, frame='icrs')
+    sc_all = SkyCoord(ra=cat[racol]*radec_units, dec=cat[deccol]*radec_units, frame='icrs')
     ra = sc_all.ra.value
     dec = sc_all.dec.value
     spatial_msk_tmp = sc_all.separation(sc_inp) < (rad*u.arcmin)
@@ -271,7 +271,7 @@ def mcmcStructParams(sc_inp, cat, rad,
         number of mcmc burn-in iterations (default: 1000)
     """
 
-    sc_all = SkyCoord(ra=cat.dat[racol]*radec_units, dec=cat.dat[deccol]*radec_units, frame='icrs')
+    sc_all = SkyCoord(ra=cat[racol]*radec_units, dec=cat[deccol]*radec_units, frame='icrs')
     ra = sc_all.ra.value
     dec = sc_all.dec.value
     spatial_msk_tmp = sc_all.separation(sc_inp) < (rad*u.arcmin)
