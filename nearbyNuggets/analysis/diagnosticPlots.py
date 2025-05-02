@@ -1013,7 +1013,7 @@ def plotcand6_gimli(sc_inp, cat, nsig,
     ra_str = str('{:7.3f}'.format(sc_inp.ra.value))
     dec_str = str('{:7.3f}'.format(sc_inp.dec.value))
     nsig_str = str('{:5.1f}'.format(nsig))
-    plt.title(r', (RA, Dec)$_0$=('+ra_str+','+dec_str+'), Nsig='+nsig_str)
+    plt.title(r'(RA, Dec)$_0$=('+ra_str+','+dec_str+'), Nsig='+nsig_str)
 
     # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     # Spatial plot:
