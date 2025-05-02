@@ -875,7 +875,7 @@ def plotcand6b(sc_inp, cat, i, nsig,
     plt.close()
 
 
-def plotcand6_gimli(sc_inp, cat, i, nsig,
+def plotcand6_gimli(sc_inp, cat, nsig,
                     comp_flag, cmdsel_flag,
                     star_flag, tract, patch, img_path=None, img_base=None,
                     binsize=1.5, recalc_cen=False, savefig=False,
@@ -929,11 +929,11 @@ def plotcand6_gimli(sc_inp, cat, i, nsig,
 # make img_path an input
 # save path for figure
 
-    sc_all = SkyCoord(ra=cat.dat['coord_ra']*u.degree, dec=cat.dat['coord_dec']*u.degree, frame='icrs')
+    sc_all = SkyCoord(ra=cat['coord_ra']*u.degree, dec=cat['coord_dec']*u.degree, frame='icrs')
     ra = sc_all.ra.value
     dec = sc_all.dec.value
-    gmag = cat.dat['g0']
-    imag = cat.dat['i0']
+    gmag = cat['g0']
+    imag = cat['i0']
     gi = gmag-imag
 
     params = {
