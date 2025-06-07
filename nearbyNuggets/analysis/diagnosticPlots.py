@@ -881,7 +881,8 @@ def plotcand6_gimli(sc_inp, cat, nsig,
                     img_path='/Volumes/gimli/hsc_data/repo/HSC/calib/madcash/ngc247/20240708T115843Z/deepCoadd_calexp/',
                     img_base='hsc_rings_v1_HSC_calib_madcash_ngc247_20240708T115843Z.fits',
                     binsize=1.5, recalc_cen=False, savefig=False,
-                    name_append='', overlay_pts=False):
+                    name_append='', overlay_pts=False,
+                    injected=False):
     """ 6 panel diagnostic figure -- CMD, spatial plot, density profile,
         color image, smoothed images in g and i
 
@@ -1068,8 +1069,12 @@ def plotcand6_gimli(sc_inp, cat, nsig,
     # img_path = '/Volumes/gimli/hsc_data/repo/HSC/calib/madcash/ngc247/20240708T115843Z/deepCoadd_calexp/'
     # # deepCoadd_calexp_6147_43_g_hsc_rings_v1_HSC_calib_madcash_ngc247_20240708T115843Z.fits
     # img_base = 'hsc_rings_v1_HSC_calib_madcash_ngc247_20240708T115843Z.fits'
-    gimg_path = img_path+str(tract)+'/'+str(patch)+'/g/deepCoadd_calexp_'+str(tract)+'_'+str(patch)+'_g_'+img_base
-    iimg_path = img_path+str(tract)+'/'+str(patch)+'/i/deepCoadd_calexp_'+str(tract)+'_'+str(patch)+'_i_'+img_base
+    if injected:
+            gimg_path = img_path+str(tract)+'/'+str(patch)+'/g/injected_deepCoadd_calexp_'+str(tract)+'_'+str(patch)+'_g_'+img_base
+            iimg_path = img_path+str(tract)+'/'+str(patch)+'/i/injected_deepCoadd_calexp_'+str(tract)+'_'+str(patch)+'_i_'+img_base
+    else:
+        gimg_path = img_path+str(tract)+'/'+str(patch)+'/g/deepCoadd_calexp_'+str(tract)+'_'+str(patch)+'_g_'+img_base
+        iimg_path = img_path+str(tract)+'/'+str(patch)+'/i/deepCoadd_calexp_'+str(tract)+'_'+str(patch)+'_i_'+img_base
     # iimg_path = img_path+'fakedwarfs_i/calexp-HSC-I2-0-'+str(patch)+'_fakes.fits'
 
     hdulist = fits.open(iimg_path)
